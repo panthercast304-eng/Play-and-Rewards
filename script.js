@@ -12,7 +12,17 @@
    the UI always reflects the authoritative server value.
    ============================================================ */
 const $=id=>document.getElementById(id);
-const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(
+  window.SUPABASE_URL,
+  window.SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
+);
 
 function uid(){return Math.random().toString(16).slice(2,10)}
 function todayKey(){return new Date().toISOString().slice(0,10)}
