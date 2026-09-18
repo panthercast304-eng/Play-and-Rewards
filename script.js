@@ -305,7 +305,7 @@ window.PFY_GameBridge = {
   async syncBalance(newBalance, gameName){
     if(!cur) return 0;
     const {data,error} = await sb.rpc("sync_coins",{p_new_balance:Math.max(0,Math.round(newBalance)),p_game:gameName||"game"});
-    if(error){ alert("SYNC ERROR: "+error.message); return cur.coins; }
+    if(error){ console.error("sync_coins failed:",error.message); return cur.coins; }
     cur.coins = data;
     if($("coins")) $("coins").textContent = cur.coins.toLocaleString();
     if($("inr")) $("inr").textContent = "≈ ₹"+(cur.coins/10).toFixed(2);
