@@ -344,10 +344,10 @@
   <!-- Telega.io Mini App SDK -->
   <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
   <script>
-    let ads = null;
+    window.telegaAds = null;
     try {
       if (window.TelegaIn && window.TelegaIn.AdsController) {
-        ads = window.TelegaIn.AdsController.create_miniapp({
+        window.telegaAds = window.TelegaIn.AdsController.create_miniapp({
           token: '68042659-e6b4-418f-82b4-e96c89f54ef6' });
       }
     } catch (e) { console.warn('Telega SDK not ready:', e); }
