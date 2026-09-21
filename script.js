@@ -502,11 +502,15 @@ function tadsOnShowReward(result){
 function tadsOnAdsNotFound(){
   if(tadsPending){ const p=tadsPending; tadsPending=null; p.fail(); }
 }
-try{
-  if(window.tads){
-    tadsController=window.tads.init({widgetId:TADS_WIDGET_ID,type:"fullscreen",debug:false,onShowReward:tadsOnShowReward,onAdsNotFound:tadsOnAdsNotFound});
-  }else console.warn("window.tads is undefined — TADS SDK script did not load.");
-}catch(e){ console.warn("TADS SDK not available:",e); }
+function ensureTads(){
+  if(tadsController) return true;
+  try{
+    if(window.tads){
+      tadsController=window.tads.init({widgetId:TADS_WIDGET_ID,type:"fullscreen",debug:false,onShowReward:tadsOnShowReward,onAdsNotFound:tadsOnAdsNotFound});
+    }
+  }catch(e){ console.warn("TADS SDK not available:",e); }
+  return !!tadsController;
+}
 
 async function creditAdCoins(source){
   if(!cur) return;
@@ -539,7 +543,7 @@ function releaseNetwork(net){
 /* play() only shows the ad and resolves once it has been watched. Coins are given afterwards. */
 const AD_NETWORKS=[
   { name:"TADS", source:"tads_ad",
-    ready:()=>!!tadsController,
+    ready:()=>ensureTads(),
     play:()=>new Promise((resolve,reject)=>{
       let got=false;
       tadsPending={ reward:()=>{ got=true; resolve(); }, fail:()=>reject(new Error("tads_no_ad")) };
