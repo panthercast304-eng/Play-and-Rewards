@@ -559,7 +559,13 @@ const AD_NETWORKS=[
     play:async()=>{ await window.showadsbitvex(); } },
   { name:"GigaPub", source:"gigapub_ad",
     ready:()=>typeof window.showGiga==="function",
-    play:async()=>{ await window.showGiga(); } }
+    play:async()=>{ await window.showGiga(); } },
+  /* Telega.io - OFF until you paste its show-ad code below.
+     1) In ready(): return true when the SDK is loaded (e.g. typeof ads!=="undefined" && ...)
+     2) In play(): call the show function from your Telega ad block snippet and await it. */
+  { name:"Telega", source:"telega_ad",
+    ready:()=>false,
+    play:async()=>{ /* paste Telega show-ad call here */ } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
