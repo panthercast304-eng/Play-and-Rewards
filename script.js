@@ -491,7 +491,7 @@ const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
 // true  = if a network fails, start the next network immediately (can overlap with an
 //         error popup that a network is still showing).
 const AUTO_FALLBACK=false;
-const NET_HOLD_MS=60*60*1000;  // a network that failed fast is skipped for 1 hour
+const NET_HOLD_MS=5*60*1000;   // a network that failed fast is skipped for 5 minutes
 const TADS_WIDGET_ID="12224";
 let tadsController=null, tadsPending=null;
 
