@@ -523,6 +523,25 @@ function ensureTads(){
   return !!tadsController;
 }
 
+/* Static banner widget (12267) — plain click-through banner, no coins, no reward logic.
+   Renders itself into <div id="tads-container-12267"> once initialized. */
+const TADS_BANNER_WIDGET_ID="12267";
+let tadsBannerController=null;
+function ensureTadsBanner(){
+  if(tadsBannerController) return true;
+  try{
+    if(window.tads){
+      tadsBannerController=window.tads.init({
+        widgetId:TADS_BANNER_WIDGET_ID,
+        type:"static",
+        debug:false,
+        onAdsNotFound:()=>console.log("No banner ad available for widget "+TADS_BANNER_WIDGET_ID)
+      });
+    }
+  }catch(e){ console.warn("TADS banner SDK not available:",e); }
+  return !!tadsBannerController;
+}
+
 async function creditAdCoins(source){
   if(!cur) return;
   const {error}=await sb.rpc("record_ad_watch",{p_source:source});
@@ -652,6 +671,9 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
      $("username").textContent=cur.username||cur.email; $("mail").textContent=cur.email;
      $("memberSince").textContent="Member since "+new Date(cur.created_at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
      render(); page("home");
+
+     /* Load the TADS static banner (widget 12267) once the app UI is visible */
+     try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); }
 
      /* ---------------- capture Telegram ID (for AdsGram reward postback) ----
         If this page is opened inside Telegram (as a Mini App), Telegram
