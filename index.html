@@ -17,6 +17,7 @@
   <script async src="https://w.tads.me/widget.js"></script>
   <script async src="https://sdk.adsbitvex.com/functions/v1/ad-script?appid=000449"></script>
   <script async src="https://ad.gigapub.tech/script?id=8277"></script>
+  <script async src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
   <script async src='//libtl.com/sdk.js' data-zone='11834570' data-sdk='show_11834570'></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <meta charset="utf-8">
@@ -339,16 +340,7 @@
     }
   </script>
 
-  <!-- Telega.io Mini App SDK -->
-  <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
-  <script>
-    window.telegaAds = null;
-    try {
-      if (window.TelegaIn && window.TelegaIn.AdsController) {
-        window.telegaAds = window.TelegaIn.AdsController.create_miniapp({
-          token: '68042659-e6b4-418f-82b4-e96c89f54ef6' });
-      }
-    } catch (e) { console.warn('Telega SDK not ready:', e); }
-  </script>
+  <!-- Monetag Vignette (interstitial) ad -->
+  <script>(function(s){s.dataset.zone='11790542',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </body>
 </html>

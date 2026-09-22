@@ -484,6 +484,17 @@ if($("daily"))$("daily").onclick=daily;
    - Coins are given by the server function record_ad_watch (adds coins, counts
      the ad, applies the 10-second gap and the daily cap). */
 const AD_COINS=100;
+let telegaAds=null;
+function ensureTelega(){
+  if(telegaAds) return true;
+  try{
+    if(window.TelegaIn && window.TelegaIn.AdsController){
+      telegaAds=window.TelegaIn.AdsController.create_miniapp({token:"68042659-e6b4-418f-82b4-e96c89f54ef6"});
+    }
+  }catch(e){ console.warn("Telega SDK not available:",e); }
+  return !!telegaAds;
+}
+
 const MIN_AD_MS=5000;          // default: an ad that finishes faster than this did not really play -> no coins
 const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
 // false = ONE ad per tap. If a network has no ad, it is put on hold and the user taps again
@@ -491,7 +502,7 @@ const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
 // true  = if a network fails, start the next network immediately (can overlap with an
 //         error popup that a network is still showing).
 const AUTO_FALLBACK=false;
-const NET_HOLD_MS=5*60*1000;   // a network that failed fast is skipped for 5 minutes
+const NET_HOLD_MS=60*60*1000;  // a network that failed fast is skipped for 1 hour
 const TADS_WIDGET_ID="12224";
 let tadsController=null, tadsPending=null;
 
@@ -560,9 +571,9 @@ const AD_NETWORKS=[
   { name:"GigaPub", source:"gigapub_ad",
     ready:()=>typeof window.showGiga==="function",
     play:async()=>{ await window.showGiga(); } },
-  { name:"Telega", source:"telega_ad",
-    ready:()=>!!(window.telegaAds && typeof window.telegaAds.ad_show==="function"),
-    play:async()=>{ await window.telegaAds.ad_show({ adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5" }); } }
+  { name:"Telega.io", source:"telega_ad", minMs:8000, // no confirmed video length yet — conservative floor
+    ready:()=>ensureTelega(),
+    play:async()=>{ await telegaAds.ad_show({adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5"}); } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
