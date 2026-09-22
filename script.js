@@ -524,7 +524,8 @@ function ensureTads(){
 }
 
 /* Static banner widget (12267) — plain click-through banner, no coins, no reward logic.
-   Renders itself into <div id="tads-container-12267"> once initialized. */
+   Renders itself into <div id="tads-container-12267"> — but only after loadAd()+showAd() are called;
+   init() alone does NOT render anything. */
 const TADS_BANNER_WIDGET_ID="12267";
 let tadsBannerController=null;
 function ensureTadsBanner(){
@@ -537,6 +538,9 @@ function ensureTadsBanner(){
         debug:false,
         onAdsNotFound:()=>console.log("No banner ad available for widget "+TADS_BANNER_WIDGET_ID)
       });
+      Promise.resolve(tadsBannerController.loadAd())
+        .then(()=>tadsBannerController.showAd())
+        .catch(e=>console.warn("TADS banner failed to load:",e));
     }
   }catch(e){ console.warn("TADS banner SDK not available:",e); }
   return !!tadsBannerController;
