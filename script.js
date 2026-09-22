@@ -485,13 +485,21 @@ if($("daily"))$("daily").onclick=daily;
      the ad, applies the 10-second gap and the daily cap). */
 const AD_COINS=100;
 let telegaAds=null;
+function dbg(msg){
+  try{
+    const b=document.getElementById('debugBox');
+    if(b){ b.style.display='block'; b.innerHTML+=msg+"<br>"; }
+  }catch(e){}
+}
 function ensureTelega(){
   if(telegaAds) return true;
+  dbg("Telega: window.TelegaIn present? "+(!!window.TelegaIn)+" | AdsController? "+(!!(window.TelegaIn&&window.TelegaIn.AdsController)));
   try{
     if(window.TelegaIn && window.TelegaIn.AdsController){
       telegaAds=window.TelegaIn.AdsController.create_miniapp({token:"68042659-e6b4-418f-82b4-e96c89f54ef6"});
+      dbg("Telega: create_miniapp returned "+(!!telegaAds));
     }
-  }catch(e){ console.warn("Telega SDK not available:",e); }
+  }catch(e){ dbg("Telega init error: "+(e&&e.message?e.message:e)); console.warn("Telega SDK not available:",e); }
   return !!telegaAds;
 }
 
@@ -596,7 +604,10 @@ const AD_NETWORKS=[
     play:async()=>{ await window.showGiga(); } },
   { name:"Telega.io", source:"telega_ad", minMs:8000, // no confirmed video length yet — conservative floor
     ready:()=>ensureTelega(),
-    play:async()=>{ await telegaAds.ad_show({adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5"}); } }
+    play:async()=>{
+      try{ await telegaAds.ad_show({adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5"}); }
+      catch(e){ dbg("Telega ad_show error: "+(e&&e.message?e.message:JSON.stringify(e))); throw e; }
+    } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
