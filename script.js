@@ -697,6 +697,22 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
      /* Load the TADS static banner (widget 12267) once the app UI is visible */
      try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); }
 
+     /* Monetag In-App Interstitial (zone 11834570) — passive full-screen ad,
+        shows automatically, no coins, no user action needed.
+        frequency: 2   -> max 2 ads per session
+        capping: 0.33  -> session length = 20 minutes
+        interval: 60   -> at least 60s between the 2 ads
+        timeout: 20    -> waits 20s after app opens before the first ad
+        everyPage: false -> session keeps counting across screen changes */
+     try{
+       if(typeof show_11834570==="function"){
+         show_11834570({
+           type:"inApp",
+           inAppSettings:{ frequency:2, capping:0.33, interval:60, timeout:20, everyPage:false }
+         });
+       }
+     }catch(e){ console.warn("Monetag in-app interstitial init failed:",e); }
+
      /* ---------------- capture Telegram ID (for AdsGram reward postback) ----
         If this page is opened inside Telegram (as a Mini App), Telegram
         injects window.Telegram.WebApp with the user's info. We save their
