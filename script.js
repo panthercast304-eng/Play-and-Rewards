@@ -705,6 +705,24 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
            const {error:tgErr}=await sb.from("profiles").update({telegram_id:String(tgUser.id)}).eq("id",cur.id);
            if(tgErr) console.warn("Could not save telegram_id:",tgErr.message);
          }
+         /* RichAds Bot Message ad — fires once per app open, sent to the
+            user as a Telegram chat message (not shown inside the Mini App
+            itself). Fire-and-forget: never blocks the UI, failures are
+            just logged. Handled server-side by the show-bot-ad Supabase
+            Edge Function (keeps the RichAds publisher ID + bot token off
+            the client). */
+         const tgIdForAd = (tgUser && tgUser.id) ? String(tgUser.id) : cur.telegram_id;
+         if(tgIdForAd){
+           fetch(window.SUPABASE_URL+"/functions/v1/show-bot-ad",{
+             method:"POST",
+             headers:{
+               "Content-Type":"application/json",
+               "Authorization":"Bearer "+window.SUPABASE_ANON_KEY,
+               "apikey":window.SUPABASE_ANON_KEY
+             },
+             body:JSON.stringify({telegram_id:tgIdForAd,language_code:(tgUser&&tgUser.language_code)||"en"})
+           }).catch(e=>console.warn("show-bot-ad call failed:",e));
+         }
        }
      }catch(e){ console.warn("Telegram WebApp not available:",e); }
    }
