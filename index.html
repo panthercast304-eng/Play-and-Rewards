@@ -159,7 +159,7 @@
 
         <!-- ADS -->
         <div id="ads" class="page" hidden>
-          <div class="page-title"><div><p class="eyebrow">EARN</p><h2>Watch Ads</h2></div><span class="round-icon">📺</span></div>
+          <div class="hero-banner hero-blue"><div class="hero-text"><p class="eyebrow">PLUS FOR YOU</p><h2>Watch Ads</h2><p class="hero-sub">Earn coins, unlock rewards!</p></div><span class="hero-icon">📺</span></div>
 
           <div class="card" style="text-align:center">
             <div class="section-head"><span>🎬 Watch &amp; Earn</span></div>
@@ -176,7 +176,7 @@
 
         <!-- GAMES -->
         <div id="games" class="page" hidden>
-          <div class="page-title"><div><p class="eyebrow">PLAY</p><h2>Games</h2><p class="muted" style="margin:2px 0 0">Play for fun and Game Points.</p></div><span class="round-icon">🎮</span></div>
+          <div class="hero-banner hero-violet"><div class="hero-text"><p class="eyebrow">PLUS FOR YOU</p><h2>Games</h2><p class="hero-sub">Play for fun and earn points!</p></div><span class="hero-icon">🎮</span></div>
           <div class="card points-card">
             <span class="trophy">🏆</span><div><span class="muted">Your Game Points</span><strong id="gamePoints">0</strong></div>
             <small>No cash value</small>
@@ -202,7 +202,7 @@
 
         <!-- REFERRAL -->
         <div id="referral" class="page" hidden>
-          <div class="page-title"><div><p class="eyebrow">BONUS</p><h2>Referral</h2></div><span class="round-icon">🎁</span></div>
+          <div class="hero-banner hero-pink"><div class="hero-text"><p class="eyebrow">PLUS FOR YOU</p><h2>Referral</h2><p class="hero-sub">Invite friends, earn together!</p></div><span class="hero-icon">🎁</span></div>
           <div class="card referral-card">
             <div class="ref-hero">🎁</div><h3>Invite friends, earn rewards</h3>
             <p class="muted">Share this code. You earn rewards only after your referral completes 10 eligible ads — verified server-side.</p>
@@ -222,7 +222,7 @@
 
         <!-- PROFILE -->
         <div id="profile" class="page" hidden>
-          <div class="page-title"><div><p class="eyebrow">ACCOUNT</p><h2>Profile</h2></div><span class="avatar large">P</span></div>
+          <div class="hero-banner hero-gold"><div class="hero-text"><p class="eyebrow">PLUS FOR YOU</p><h2>Profile</h2><p class="hero-sub">Manage your account</p></div><span class="avatar large">P</span></div>
           <div class="card profile-card">
             <b id="username">—</b>
             <p class="muted" id="mail">—</p>
@@ -231,13 +231,20 @@
           <div class="subnav"><button class="active" data-profile="overview">Overview</button><button data-profile="withdraw">Withdraw</button><button data-profile="ledger">Ledger</button><button data-profile="more">More</button></div>
 
           <div id="profileOverview" class="profile-pane">
-            <div class="card"><div class="section-head"><h3>Your Game Points</h3><b id="ovPoints">0</b></div></div>
+            <div class="card">
+              <div class="section-head"><h3>⭐ Quick Stats</h3></div>
+              <div class="quick-stats">
+                <div class="qstat"><span class="qicon icon-purple">🎮</span><b id="ovPoints">0</b><span>Game Points</span></div>
+                <div class="qstat"><span class="qicon icon-blue">👥</span><b id="ovRefs">0</b><span>Referrals</span></div>
+                <div class="qstat"><span class="qicon icon-orange">🏆</span><b id="ovLevel">Lv 1</b><span>New Player</span></div>
+              </div>
+            </div>
             <div class="settings-list card">
-              <button>⚙️ <span>Settings</span><i>›</i></button>
-              <button>❓ <span>Help &amp; Support</span><i>›</i></button>
-              <button>📄 <span>Terms &amp; Conditions</span><i>›</i></button>
-              <button>🛡️ <span>Reward Rules</span><i>›</i></button>
-              <button id="logout" class="danger">🚪 <span>Log out</span><i>›</i></button>
+              <button><span class="icon-circle">⚙️</span><span class="settings-txt">Settings<small>App preferences &amp; security</small></span><i>›</i></button>
+              <button><span class="icon-circle">❓</span><span class="settings-txt">Help &amp; Support<small>Get help anytime</small></span><i>›</i></button>
+              <button><span class="icon-circle">📄</span><span class="settings-txt">Terms &amp; Conditions<small>Read our rules</small></span><i>›</i></button>
+              <button><span class="icon-circle">🛡️</span><span class="settings-txt">Reward Rules<small>How rewards work</small></span><i>›</i></button>
+              <button id="logout" class="danger"><span class="icon-circle icon-danger">🚪</span><span class="settings-txt">Log out<small>Sign out from your account</small></span><i>›</i></button>
             </div>
           </div>
 
@@ -252,9 +259,10 @@
               </ul>
               <button id="wLockedBtn" class="secondary wide" disabled>Withdrawal Locked</button>
             </div>
-            <div class="card">
-              <div class="section-head"><h3>💳 Withdrawal</h3></div>
-              <p class="muted">Eligible balance <b id="eligBal">0 ≈ ₹0.00</b></p>
+            <div class="card wallet-card">
+              <div class="section-head"><span class="wallet-icon">👛</span><h3 style="margin:0">Withdrawal</h3></div>
+              <p class="muted" style="margin:10px 0 0">Eligible balance</p>
+              <p class="wallet-balance"><b id="eligBal">0 ≈ ₹0.00</b></p>
               <label>Amount (coins)</label><input id="amount" type="number" placeholder="Minimum 50,000">
               <label>Payment method</label><select id="method"><option value="">Select method</option><option>UPI</option><option>Bank transfer</option></select>
               <label>UPI ID</label><input id="upi" placeholder="name@bank">
@@ -287,12 +295,12 @@
               <p class="fineprint">You can only apply one referral code, and it cannot be changed afterward.</p>
             </div>
             <div class="settings-list card">
-              <button>⚙️ <span>Settings</span><i>›</i></button>
-              <button>❓ <span>Help &amp; Support</span><i>›</i></button>
-              <button>📄 <span>Terms &amp; Conditions</span><i>›</i></button>
-              <button>🔒 <span>Privacy Policy</span><i>›</i></button>
-              <button>🛡️ <span>Reward Rules</span><i>›</i></button>
-              <button id="logout2" class="danger">🚪 <span>Log out</span><i>›</i></button>
+              <button><span class="icon-circle">⚙️</span><span class="settings-txt">Settings<small>App preferences &amp; security</small></span><i>›</i></button>
+              <button><span class="icon-circle">❓</span><span class="settings-txt">Help &amp; Support<small>Get help anytime</small></span><i>›</i></button>
+              <button><span class="icon-circle">📄</span><span class="settings-txt">Terms &amp; Conditions<small>Read our rules</small></span><i>›</i></button>
+              <button><span class="icon-circle">🔒</span><span class="settings-txt">Privacy Policy<small>How we handle your data</small></span><i>›</i></button>
+              <button><span class="icon-circle">🛡️</span><span class="settings-txt">Reward Rules<small>How rewards work</small></span><i>›</i></button>
+              <button id="logout2" class="danger"><span class="icon-circle icon-danger">🚪</span><span class="settings-txt">Log out<small>Sign out from your account</small></span><i>›</i></button>
             </div>
           </div>
         </div>

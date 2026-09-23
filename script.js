@@ -357,6 +357,8 @@ function render(){
  $("inr").textContent="≈ ₹"+(cur.coins/10).toFixed(2);
  $("gamePoints").textContent=cur.game_points.toLocaleString();
  $("ovPoints").textContent=cur.game_points.toLocaleString();
+ if($("ovRefs"))$("ovRefs").textContent=cur.referredUsers.filter(r=>r.status==="claimed").length;
+ if($("ovLevel"))$("ovLevel").textContent="Lv "+(1+Math.floor(cur.game_points/1000));
 
  const successfulRefs=cur.referredUsers.filter(r=>r.status==="claimed").length;
  const eligibleRefs=cur.referredUsers.filter(r=>r.status==="eligible"||r.status==="claimed").length;
@@ -389,11 +391,13 @@ function render(){
  $("eligBal").textContent=cur.coins.toLocaleString()+" ≈ ₹"+(cur.coins/10).toFixed(2);
 
  const ledgerEl=$("ledgerList");
+ const ledgerIcon=t=>t==="game_win"?"⭐":t==="referral_bonus"?"👥":"▶️";
+ const ledgerCls=t=>t==="game_win"?"icon-orange":t==="referral_bonus"?"icon-blue":"icon-teal";
  if(cur.ledger.length){
    ledgerEl.innerHTML="";
    cur.ledger.forEach(l=>{
      const div=document.createElement("div");div.className="ledger-item";
-     div.innerHTML=`<div><b>${l.type}</b><div class="muted">${fmtDate(l.date)} · Status: ${l.status}</div></div><span class="ledger-amt">${l.amount>=0?"+":""}${l.amount}</span>`;
+     div.innerHTML=`<div class="li-left"><span class="li-icon ${ledgerCls(l.type)}">${ledgerIcon(l.type)}</span><div><b>${l.type}</b><div class="muted">${fmtDate(l.date)} · ${l.status}</div></div></div><span class="ledger-amt">${l.amount>=0?"+":""}${l.amount}</span>`;
      ledgerEl.appendChild(div);
    });
  } else ledgerEl.innerHTML=`<div class="empty">No verified transactions yet.</div>`;
