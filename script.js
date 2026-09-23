@@ -488,31 +488,12 @@ if($("daily"))$("daily").onclick=daily;
    - Coins are given by the server function record_ad_watch (adds coins, counts
      the ad, applies the 10-second gap and the daily cap). */
 const AD_COINS=100;
-let telegaAds=null;
 function dbg(msg){
   try{
     const b=document.getElementById('debugBox');
     if(b){ b.style.display='block'; b.innerHTML+=msg+"<br>"; }
   }catch(e){}
 }
-function ensureTelega(){
-  if(telegaAds) return true;
-  dbg("Telega: window.TelegaIn present? "+(!!window.TelegaIn)+" | AdsController? "+(!!(window.TelegaIn&&window.TelegaIn.AdsController)));
-  try{
-    if(window.TelegaIn && window.TelegaIn.AdsController){
-      telegaAds=window.TelegaIn.AdsController.create_miniapp({token:"68042659-e6b4-418f-82b4-e96c89f54ef6"});
-      dbg("Telega: create_miniapp returned "+(!!telegaAds));
-    }
-  }catch(e){ dbg("Telega init error: "+(e&&e.message?e.message:e)); console.warn("Telega SDK not available:",e); }
-  return !!telegaAds;
-}
-// The SDK script tag is async, so it can still be loading when the app first
-// checks for it. Keep polling for up to 20s so a slow-loading script is still
-// picked up instead of being permanently marked "not available".
-(function pollTelega(triesLeft){
-  if(ensureTelega() || triesLeft<=0) return;
-  setTimeout(()=>pollTelega(triesLeft-1), 500);
-})(40);
 
 const MIN_AD_MS=5000;          // default: an ad that finishes faster than this did not really play -> no coins
 const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
@@ -612,13 +593,7 @@ const AD_NETWORKS=[
     play:async()=>{ await window.showadsbitvex(); } },
   { name:"GigaPub", source:"gigapub_ad",
     ready:()=>typeof window.showGiga==="function",
-    play:async()=>{ await window.showGiga(); } },
-  { name:"Telega.io", source:"telega_ad", minMs:8000, // no confirmed video length yet — conservative floor
-    ready:()=>ensureTelega(),
-    play:async()=>{
-      try{ await telegaAds.ad_show({adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5"}); }
-      catch(e){ dbg("Telega ad_show error: "+(e&&e.message?e.message:JSON.stringify(e))); throw e; }
-    } }
+    play:async()=>{ await window.showGiga(); } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
