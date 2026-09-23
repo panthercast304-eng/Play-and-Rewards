@@ -337,6 +337,7 @@ const LB_ALL=[["🏆 NovaPlayer",4820],["⭐ PixelKing",4260],["🪙 CoinMaster"
 const LB_WEEK=[["⭐ PixelKing",640],["🏆 NovaPlayer",580],["🎯 QuizWhiz",510],["🪙 CoinMaster",410],["🔥 StreakKing",300]];
 let lbMode="all";
 function renderLeaderboard(){
+ if(!cur)return;
  const list=(lbMode==="all"?LB_ALL:LB_WEEK).slice();
  list.push(["🎮 You",cur.game_points]);
  list.sort((a,b)=>b[1]-a[1]);
@@ -662,12 +663,9 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
  if(ref)$("refQuery").value=ref;
 
  const {data:{session},error:sessionErr}=await sb.auth.getSession();
- if(sessionErr){ $("msg").textContent="DEBUG session error: "+sessionErr.message; }
- else if(!session){ $("msg").textContent="DEBUG: no session found on reload."; }
  if(session){
-   $("msg").textContent="DEBUG: session OK for "+session.user.email+" — fetching profile…";
    const {data:profile,error:profileErr}=await sb.from("profiles").select("*").eq("id",session.user.id).single();
-   if(profileErr){ $("msg").textContent="DEBUG profile error: "+profileErr.message; }
+   if(profileErr){ $("msg").textContent="Couldn't load your profile — please try logging in again."; }
    if(profile){
      cur={...profile, referredUsers:[], ledger:[], withdrawals:[]};
      await refreshCurrent();
