@@ -79,6 +79,10 @@ function page(p){
  const titles={home:"Welcome back",ads:"Watch Ads",games:"Games",referral:"Referral",profile:"Profile"};
  $("headerTitle").textContent=titles[p]||"Welcome back";
  if(p==="games")renderLeaderboard();
+ /* TADS static banner (widget 12267) only loads once its container is actually
+    visible — the Ads page is hidden until the user taps the Ads tab, and some
+    ad SDKs fail to render into a hidden (zero-size) container. */
+ if(p==="ads"){ try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); } }
 }
 
 async function enter(isSignup){
@@ -693,9 +697,6 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
      $("username").textContent=cur.username||cur.email; $("mail").textContent=cur.email;
      $("memberSince").textContent="Member since "+new Date(cur.created_at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
      render(); page("home");
-
-     /* Load the TADS static banner (widget 12267) once the app UI is visible */
-     try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); }
 
      /* Monetag In-App Interstitial (zone 11834570) — passive full-screen ad,
         shows automatically, no coins, no user action needed.
