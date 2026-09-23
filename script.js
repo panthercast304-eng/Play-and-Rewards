@@ -502,6 +502,13 @@ function ensureTelega(){
   }catch(e){ dbg("Telega init error: "+(e&&e.message?e.message:e)); console.warn("Telega SDK not available:",e); }
   return !!telegaAds;
 }
+// The SDK script tag is async, so it can still be loading when the app first
+// checks for it. Keep polling for up to 20s so a slow-loading script is still
+// picked up instead of being permanently marked "not available".
+(function pollTelega(triesLeft){
+  if(ensureTelega() || triesLeft<=0) return;
+  setTimeout(()=>pollTelega(triesLeft-1), 500);
+})(40);
 
 const MIN_AD_MS=5000;          // default: an ad that finishes faster than this did not really play -> no coins
 const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
