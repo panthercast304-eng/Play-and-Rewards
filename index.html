@@ -2,17 +2,13 @@
 <html lang="en">
 <head>
   <meta name="adsbitvex-verify" content="FguKChtcK4wgEecGGHxcuZcQ">
-  <div id="debugBox" style="position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;font-size:11px;padding:6px;z-index:99999;max-height:120px;overflow:auto;display:none"></div>
   <script>
+  // Errors are logged to the browser console only, never shown on-screen to users.
   window.onerror=function(msg,src,line){
-    var b=document.getElementById('debugBox');
-    b.style.display='block';
-    b.innerHTML+="ERROR: "+msg+" (line "+line+")<br>";
+    console.error("ERROR:",msg,"(line",line+")");
   };
   window.addEventListener('unhandledrejection',function(e){
-    var b=document.getElementById('debugBox');
-    b.style.display='block';
-    b.innerHTML+="PROMISE ERROR: "+(e.reason&&e.reason.message?e.reason.message:e.reason)+"<br>";
+    console.error("PROMISE ERROR:",(e.reason&&e.reason.message?e.reason.message:e.reason));
   });
   </script>
   <script async src="https://w.tads.me/widget.js"></script>
