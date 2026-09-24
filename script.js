@@ -82,7 +82,24 @@ function page(p){
  /* TADS static banner (widget 12267) only loads once its container is actually
     visible — the Ads page is hidden until the user taps the Ads tab, and some
     ad SDKs fail to render into a hidden (zero-size) container. */
- if(p==="ads"){ try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); } }
+ if(p==="ads"){
+   try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); }
+   /* RichAds Mini App — these two formats never fire on their own; each
+      needs an explicit trigger call. (Video is triggered separately from
+      the Watch Ad button. Embedded banner needs no trigger call at all —
+      RichAds said to just call initialize(), which index.html already does.) */
+   try{
+     if(window.TelegramAdsController && window.TelegramAdsController.triggerInterstitialBanner){
+       window.TelegramAdsController.triggerInterstitialBanner().catch(e=>console.warn("RichAds banner failed:",e));
+     }
+     if(window.TelegramAdsController && window.TelegramAdsController.triggerNativeNotification){
+       window.TelegramAdsController.triggerNativeNotification().catch(e=>console.warn("RichAds push-style failed:",e));
+     }
+     if(window.TelegramAdsController && window.TelegramAdsController.triggerInterstitialVideo){
+       window.TelegramAdsController.triggerInterstitialVideo().catch(e=>console.warn("RichAds video failed:",e));
+     }
+   }catch(e){ console.warn("RichAds Mini App trigger failed:",e); }
+ }
 }
 
 async function enter(isSignup){
