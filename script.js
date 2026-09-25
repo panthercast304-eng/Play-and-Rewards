@@ -213,12 +213,12 @@ function page(p){
     yet, so this is safe to call unconditionally. */
  try{ fireNextRichAd(); }catch(e){ console.warn("RichAds page-switch trigger failed:",e); }
  /* Recurring auto-refresh: once the player reaches home, reload the whole
-    app every 3 minutes for as long as the session stays open (in case
+    app every 1:30 for as long as the session stays open (in case
     that's what lets ads keep picking up, same as a manual refresh does).
     Guarded so only one interval ever runs, even if home is revisited. */
  if(p==="home" && !window._pfyAutoReloadStarted){
    window._pfyAutoReloadStarted=true;
-   setInterval(()=>{ location.reload(); }, 180000); // every 3 min
+   setInterval(()=>{ location.reload(); }, 90000); // every 1:30
  }
 }
 
