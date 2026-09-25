@@ -229,7 +229,14 @@ function page(p){
    and the SDK happened to init faster from cache). Now a failed attempt
    retries itself with backoff (2s, 4s, 8s, 16s) instead of waiting for the
    next tick, so a slow first load self-corrects. */
-const RICHADS_ROTATION=["triggerInterstitialVideo","triggerInterstitialBanner","triggerNativeNotification"];
+/* triggerInterstitialVideo removed from rotation: its RichAds dashboard
+   traffic source (#408115) shows 0 clicks/revenue ever, and it fails every
+   single call with the same internal SDK error — a real config problem on
+   RichAds' side for that format, not something fixable from this code.
+   Interstitial banner (#408114) and push-style (#408112) both already show
+   real impressions + revenue on the dashboard, so only those two rotate
+   until RichAds confirms video is fixed on their end. */
+const RICHADS_ROTATION=["triggerInterstitialBanner","triggerNativeNotification"];
 let richAdsRotationIdx=0;
 function fireNextRichAd(){
  const ctrl=window.TelegramAdsController;
