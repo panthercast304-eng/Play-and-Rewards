@@ -175,6 +175,26 @@ function closeInfo(){ $("infoModal").classList.remove("show"); }
 window.openInfo=openInfo;
 window.closeInfo=closeInfo;
 
+/* ---------------- RichAds debug panel (triple-tap header title) ---------------- */
+function openRichDebug(){
+ const body=$("richDebugBody");
+ if(body) body.textContent=(window.richAdsLog&&window.richAdsLog.length) ? window.richAdsLog.join("\n") : "(no log entries yet)";
+ $("richDebugModal").classList.add("show");
+}
+function closeRichDebug(){ $("richDebugModal").classList.remove("show"); }
+window.closeRichDebug=closeRichDebug;
+(function wireRichDebugTap(){
+ let taps=0, tapTimer=null;
+ const el=$("headerTitle");
+ if(!el) return;
+ el.addEventListener("click",()=>{
+   taps++;
+   clearTimeout(tapTimer);
+   tapTimer=setTimeout(()=>{ taps=0; }, 1200);
+   if(taps>=3){ taps=0; openRichDebug(); }
+ });
+})();
+
 /* ---------------- auth ---------------- */
 function page(p){
  document.querySelectorAll(".page").forEach(x=>x.hidden=x.id!==p);
@@ -199,33 +219,52 @@ function page(p){
    the app stays open, regardless of which section the user is on — this
    runs independently of the page-switch trigger above, so ads can appear
    from either source. Waits for RichAds to report ready before the first
-   fire, fixing the bug where ads only worked after a manual page refresh. */
+   fire.
+   IMPORTANT: window.richAdsReady flipping true is a best-guess timer, not
+   a real "the SDK can actually serve now" signal — on a slow/cold mobile
+   connection it can flip early, before the SDK's internal setup is truly
+   done, and the trigger call below rejects. Previously that single failed
+   attempt was just logged and dropped, so nothing played again until the
+   next scheduled tick (or, in practice, until the user manually refreshed
+   and the SDK happened to init faster from cache). Now a failed attempt
+   retries itself with backoff (2s, 4s, 8s, 16s) instead of waiting for the
+   next tick, so a slow first load self-corrects. */
 const RICHADS_ROTATION=["triggerInterstitialVideo","triggerInterstitialBanner","triggerNativeNotification"];
 let richAdsRotationIdx=0;
 function fireNextRichAd(){
+ const ctrl=window.TelegramAdsController;
+ if(!ctrl || !window.richAdsReady) return;
+ const method=RICHADS_ROTATION[richAdsRotationIdx%RICHADS_ROTATION.length];
+ richAdsRotationIdx++;
+ richAdsFireWithRetry(method,0);
+}
+function richAdsFireWithRetry(method,attempt){
  try{
    const ctrl=window.TelegramAdsController;
-   if(!ctrl || !window.richAdsReady) return;
-   const method=RICHADS_ROTATION[richAdsRotationIdx%RICHADS_ROTATION.length];
-   richAdsRotationIdx++;
-   if(typeof ctrl[method]==="function"){
-     ctrl[method]().catch(e=>console.warn("RichAds "+method+" failed:",e));
+   if(!ctrl || typeof ctrl[method]!=="function"){
+     window._richAdsLog&&window._richAdsLog(method+": not available on controller");
+     return;
    }
- }catch(e){ console.warn("RichAds rotation failed:",e); }
+   ctrl[method]().then(()=>{
+     window._richAdsLog&&window._richAdsLog(method+": played ok"+(attempt?(" (after retry "+attempt+")"):""));
+   }).catch(e=>{
+     window._richAdsLog&&window._richAdsLog(method+" failed (attempt "+attempt+"): "+(e&&e.message?e.message:e));
+     if(attempt<4){
+       setTimeout(()=>richAdsFireWithRetry(method,attempt+1), 2000*Math.pow(2,attempt));
+     }
+   });
+ }catch(e){ window._richAdsLog&&window._richAdsLog(method+" threw: "+e.message); }
 }
 function startRichAdsRotation(){
  // Wait for the SDK to report ready (set in index.html after initialize())
- // before starting; retry every 500ms up to ~10s in case it's slow to load.
- let waited=0;
+ // before starting; keep checking every 500ms — no giving up. On a very
+ // slow connection this may take a while, but it will start as soon as
+ // the flag flips rather than requiring a refresh.
  const waitForReady=setInterval(()=>{
-   waited+=500;
    if(window.richAdsReady){
      clearInterval(waitForReady);
      fireNextRichAd();                       // first ad shortly after ready, no refresh needed
      setInterval(fireNextRichAd,45000);       // then every 45s -> 4x per 3 minutes
-   } else if(waited>=10000){
-     clearInterval(waitForReady);
-     console.warn("RichAds: SDK never reported ready, rotation not started.");
    }
  },500);
 }
