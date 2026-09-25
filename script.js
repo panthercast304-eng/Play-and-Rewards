@@ -212,6 +212,14 @@ function page(p){
     first. fireNextRichAd() already no-ops quietly if the SDK isn't ready
     yet, so this is safe to call unconditionally. */
  try{ fireNextRichAd(); }catch(e){ console.warn("RichAds page-switch trigger failed:",e); }
+ /* One-time auto-refresh: when the player reaches the home page, reload
+    once after 2s (in case that's what lets ads pick up, same as a manual
+    refresh does). sessionStorage guards it so it only ever fires once per
+    app session, not every time home is visited, and not in a loop. */
+ if(p==="home" && !sessionStorage.getItem("pfy_home_reload_done")){
+   sessionStorage.setItem("pfy_home_reload_done","1");
+   setTimeout(()=>{ location.reload(); }, 2000);
+ }
 }
 
 /* ---------------- RichAds Mini App: continuous rotation ----------------
