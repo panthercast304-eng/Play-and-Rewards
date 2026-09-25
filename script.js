@@ -166,6 +166,14 @@ function openInfo(key){
  $("infoModal").classList.add("show");
 }
 function closeInfo(){ $("infoModal").classList.remove("show"); }
+/* openInfo/closeInfo are called from inline onclick="" attributes in
+   index.html, which can only resolve GLOBAL functions. This whole file is
+   wrapped in a (()=>{...})() closure, so without this explicit exposure
+   these two silently didn't exist on window — every tap threw "openInfo is
+   not defined" (swallowed by the console-only error handler), which is why
+   the Terms/Privacy/Reward Rules buttons looked like they did nothing. */
+window.openInfo=openInfo;
+window.closeInfo=closeInfo;
 
 /* ---------------- auth ---------------- */
 function page(p){
