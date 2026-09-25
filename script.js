@@ -212,13 +212,13 @@ function page(p){
     first. fireNextRichAd() already no-ops quietly if the SDK isn't ready
     yet, so this is safe to call unconditionally. */
  try{ fireNextRichAd(); }catch(e){ console.warn("RichAds page-switch trigger failed:",e); }
- /* One-time auto-refresh: when the player reaches the home page, reload
-    once after 2s (in case that's what lets ads pick up, same as a manual
-    refresh does). sessionStorage guards it so it only ever fires once per
-    app session, not every time home is visited, and not in a loop. */
- if(p==="home" && !sessionStorage.getItem("pfy_home_reload_done")){
-   sessionStorage.setItem("pfy_home_reload_done","1");
-   setTimeout(()=>{ location.reload(); }, 2000);
+ /* Recurring auto-refresh: once the player reaches home, reload the whole
+    app every 3 minutes for as long as the session stays open (in case
+    that's what lets ads keep picking up, same as a manual refresh does).
+    Guarded so only one interval ever runs, even if home is revisited. */
+ if(p==="home" && !window._pfyAutoReloadStarted){
+   window._pfyAutoReloadStarted=true;
+   setInterval(()=>{ location.reload(); }, 180000); // every 3 min
  }
 }
 
