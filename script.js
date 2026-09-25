@@ -239,11 +239,24 @@ function page(p){
 const RICHADS_ROTATION=["triggerInterstitialBanner","triggerNativeNotification"];
 let richAdsRotationIdx=0;
 function fireNextRichAd(){
- const ctrl=window.TelegramAdsController;
- if(!ctrl || !window.richAdsReady) return;
+ // Always attempt — never silently drop. If window.TelegramAdsController
+ // hasn't been constructed yet (script still loading), queue a short retry
+ // loop for IT specifically, separate from the per-ad-call retry below,
+ // so a tab tap in the first second of a cold open still results in an ad
+ // instead of doing nothing.
  const method=RICHADS_ROTATION[richAdsRotationIdx%RICHADS_ROTATION.length];
  richAdsRotationIdx++;
+ if(!window.TelegramAdsController){
+   window._richAdsLog&&window._richAdsLog(method+": controller not constructed yet, queuing");
+   waitForControllerThenFire(method,0);
+   return;
+ }
  richAdsFireWithRetry(method,0);
+}
+function waitForControllerThenFire(method,attempt){
+ if(window.TelegramAdsController){ richAdsFireWithRetry(method,0); return; }
+ if(attempt>=10){ window._richAdsLog&&window._richAdsLog(method+": controller never appeared, giving up"); return; }
+ setTimeout(()=>waitForControllerThenFire(method,attempt+1), 1000);
 }
 function richAdsFireWithRetry(method,attempt){
  try{
@@ -256,8 +269,12 @@ function richAdsFireWithRetry(method,attempt){
      window._richAdsLog&&window._richAdsLog(method+": played ok"+(attempt?(" (after retry "+attempt+")"):""));
    }).catch(e=>{
      window._richAdsLog&&window._richAdsLog(method+" failed (attempt "+attempt+"): "+(e&&e.message?e.message:e));
-     if(attempt<4){
-       setTimeout(()=>richAdsFireWithRetry(method,attempt+1), 2000*Math.pow(2,attempt));
+     // Up to 7 retries with capped backoff (2,4,8,16,30,30,30s ≈ 2min total)
+     // so a genuinely slow cold connection has real time to recover instead
+     // of being abandoned after 30s.
+     if(attempt<7){
+       const delay=Math.min(2000*Math.pow(2,attempt),30000);
+       setTimeout(()=>richAdsFireWithRetry(method,attempt+1), delay);
      }
    });
  }catch(e){ window._richAdsLog&&window._richAdsLog(method+" threw: "+e.message); }
