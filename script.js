@@ -178,23 +178,47 @@ function page(p){
     visible — the Ads page is hidden until the user taps the Ads tab, and some
     ad SDKs fail to render into a hidden (zero-size) container. */
  if(p==="ads"){ try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); } }
+ /* RichAds Mini App ads now run on their own continuous timer (see
+    startRichAdsRotation below), not tied to page switches — this fixes the
+    "only works after refresh" bug and gives a steady 3-times-per-3-minutes
+    cadence no matter which section the user is on. */
+}
 
- /* RichAds Mini App — fires on every tab switch (any page, any time), not
-    just the Ads tab. Video/Banner are full-screen overlays, push-style is
-    a lighter native-style notification. Embedded banner needs no trigger
-    call at all — RichAds said to just call initialize(), which index.html
-    already does. */
+/* ---------------- RichAds Mini App: continuous rotation ----------------
+   Fires an ad every 60 seconds (so ~3 times per 3 minutes), for as long as
+   the app stays open — regardless of which section the user is on. The
+   same rotation (video -> banner -> push-style -> repeat) keeps running
+   across section switches, so it stays consistent rather than resetting.
+   Waits for RichAds to report ready before the first fire, fixing the bug
+   where ads only worked after a manual page refresh. */
+const RICHADS_ROTATION=["triggerInterstitialVideo","triggerInterstitialBanner","triggerNativeNotification"];
+let richAdsRotationIdx=0;
+function fireNextRichAd(){
  try{
-   if(window.TelegramAdsController && window.TelegramAdsController.triggerInterstitialBanner){
-     window.TelegramAdsController.triggerInterstitialBanner().catch(e=>console.warn("RichAds banner failed:",e));
+   const ctrl=window.TelegramAdsController;
+   if(!ctrl || !window.richAdsReady) return;
+   const method=RICHADS_ROTATION[richAdsRotationIdx%RICHADS_ROTATION.length];
+   richAdsRotationIdx++;
+   if(typeof ctrl[method]==="function"){
+     ctrl[method]().catch(e=>console.warn("RichAds "+method+" failed:",e));
    }
-   if(window.TelegramAdsController && window.TelegramAdsController.triggerNativeNotification){
-     window.TelegramAdsController.triggerNativeNotification().catch(e=>console.warn("RichAds push-style failed:",e));
+ }catch(e){ console.warn("RichAds rotation failed:",e); }
+}
+function startRichAdsRotation(){
+ // Wait for the SDK to report ready (set in index.html after initialize())
+ // before starting; retry every 500ms up to ~10s in case it's slow to load.
+ let waited=0;
+ const waitForReady=setInterval(()=>{
+   waited+=500;
+   if(window.richAdsReady){
+     clearInterval(waitForReady);
+     fireNextRichAd();                       // first ad shortly after ready, no refresh needed
+     setInterval(fireNextRichAd,60000);       // then every 60s -> 3x per 3 minutes
+   } else if(waited>=10000){
+     clearInterval(waitForReady);
+     console.warn("RichAds: SDK never reported ready, rotation not started.");
    }
-   if(window.TelegramAdsController && window.TelegramAdsController.triggerInterstitialVideo){
-     window.TelegramAdsController.triggerInterstitialVideo().catch(e=>console.warn("RichAds video failed:",e));
-   }
- }catch(e){ console.warn("RichAds Mini App trigger failed:",e); }
+ },500);
 }
 
 async function enter(isSignup){
@@ -612,7 +636,7 @@ function dbg(msg){
   }catch(e){}
 }
 
-const MIN_AD_MS=5000;          // default: an ad that finishes faster than this did not really play -> no coins
+const MIN_AD_MS=4000;          // default: an ad that finishes faster than this did not really play -> no coins
 const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
 // false = ONE ad per tap. If a network has no ad, it is put on hold and the user taps again
 //         (a different network is picked). This avoids two ads playing at the same time.
@@ -705,7 +729,7 @@ const AD_NETWORKS=[
   { name:"Monetag", source:"monetag_ad",
     ready:()=>typeof show_11834570==="function",
     play:async()=>{ await show_11834570(); } },
-  { name:"Adsbitvex", source:"adsbitvex_ad", minMs:12000, /* its reward ad has a 15s countdown */
+  { name:"Adsbitvex", source:"adsbitvex_ad", minMs:4000, /* lowered from 12s per request — was too long for users to wait */
     ready:()=>typeof window.showadsbitvex==="function",
     play:async()=>{ await window.showadsbitvex(); } },
   { name:"GigaPub", source:"gigapub_ad",
@@ -742,6 +766,7 @@ const SHOW_AD_NETWORK_NAME=true;
 const adLabel=n=>SHOW_AD_NETWORK_NAME?" ("+n.name+")":"";
 
 let adBusy=false;
+let lastAdNetworkName=null;
 async function watchAd(){
   if(adBusy) return; adBusy=true;
   const btn=$("watchAdBtn"), msg=$("adMsg");
@@ -749,13 +774,20 @@ async function watchAd(){
   try{
     const loaded=AD_NETWORKS.filter(n=>n.ready());
     if(!loaded.length){ if(msg)msg.textContent="Ad system not loaded yet — please try again in a moment."; return; }
-    const nets=shuffle(loaded.filter(n=>!isHeld(n)));
-    if(!nets.length){ if(msg)msg.textContent="No ad available right now — please try again in a while."; return; }
+    let pool=loaded.filter(n=>!isHeld(n));
+    if(!pool.length){ if(msg)msg.textContent="No ad available right now — please try again in a while."; return; }
+    /* Never show the same network twice in a row — unless it's the only
+       one currently available, in which case there's no other option. */
+    if(pool.length>1 && lastAdNetworkName){
+      const withoutLast=pool.filter(n=>n.name!==lastAdNetworkName);
+      if(withoutLast.length) pool=withoutLast;
+    }
+    const nets=shuffle(pool);
     for(const net of nets){
       if(msg)msg.textContent="Loading ad…"+adLabel(net);
       const r=await tryNetwork(net);
-      if(r.ok){ if(msg)msg.textContent=r.msg+adLabel(net); return; }
-      if(r.stopMsg){ if(msg)msg.textContent=r.stopMsg+adLabel(net); return; }
+      if(r.ok){ lastAdNetworkName=net.name; if(msg)msg.textContent=r.msg+adLabel(net); return; }
+      if(r.stopMsg){ lastAdNetworkName=net.name; if(msg)msg.textContent=r.stopMsg+adLabel(net); return; }
       if(!AUTO_FALLBACK){ if(msg)msg.textContent="No ad from this network right now — tap Watch Ad again"+adLabel(net); return; }
     }
     if(msg)msg.textContent="No ad available right now — try again shortly.";
@@ -786,6 +818,7 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
      $("username").textContent=cur.username||cur.email; $("mail").textContent=cur.email;
      $("memberSince").textContent="Member since "+new Date(cur.created_at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
      render(); page("home");
+     try{ startRichAdsRotation(); }catch(e){ console.warn("RichAds rotation start failed:",e); }
 
      /* Monetag In-App Interstitial (zone 11834570) — passive full-screen ad,
         shows automatically, no coins, no user action needed.

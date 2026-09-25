@@ -19,10 +19,18 @@
        interstitial video, embedded banner, playable) -->
   <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
   <script>
+    window.richAdsReady=false;
     try{
       if(typeof TelegramAdsController!=="undefined"){
         window.TelegramAdsController=new TelegramAdsController();
         window.TelegramAdsController.initialize({ pubId:"1023471", appId:"9021" });
+        /* initialize() does its own setup work in the background before the
+           SDK is actually ready to serve ads. Calling trigger*() too soon
+           after initialize() silently fails — this is why ads worked only
+           after a manual refresh (by then, setup had already finished on
+           the previous load). A short delay here, plus script.js waiting
+           on this flag before its first trigger, fixes that. */
+        setTimeout(()=>{ window.richAdsReady=true; }, 1500);
       } else {
         console.warn("RichAds: TelegramAdsController script did not load.");
       }
@@ -167,8 +175,6 @@
 
         <!-- ADS -->
         <div id="ads" class="page" hidden>
-          <div class="hero-banner hero-blue"><div class="hero-text"><p class="eyebrow">PLUS FOR YOU</p><h2>Watch Ads</h2><p class="hero-sub">Earn coins, unlock rewards!</p></div><span class="hero-icon">📺</span></div>
-
           <div class="card ad-notice">
             <b>⚠️ Important Notice</b>
             <ul>
@@ -351,7 +357,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script><script src="script.js?v=11"></script>
+  <script src="config.js"></script><script src="script.js?v=12"></script>
 
   <!-- Inline game overlay (added: embeds the 8 games directly in this file) -->
   <style>
