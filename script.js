@@ -186,19 +186,20 @@ function page(p){
     visible — the Ads page is hidden until the user taps the Ads tab, and some
     ad SDKs fail to render into a hidden (zero-size) container. */
  if(p==="ads"){ try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); } }
- /* RichAds Mini App ads now run on their own continuous timer (see
-    startRichAdsRotation below), not tied to page switches — this fixes the
-    "only works after refresh" bug and gives a steady 3-times-per-3-minutes
-    cadence no matter which section the user is on. */
+ /* RichAds: fire an ad on every tab/section switch (home/ads/games/profile),
+    in addition to the standalone timer below — both run together, so ads
+    can show from navigation OR just from time passing, whichever comes
+    first. fireNextRichAd() already no-ops quietly if the SDK isn't ready
+    yet, so this is safe to call unconditionally. */
+ try{ fireNextRichAd(); }catch(e){ console.warn("RichAds page-switch trigger failed:",e); }
 }
 
 /* ---------------- RichAds Mini App: continuous rotation ----------------
-   Fires an ad every 60 seconds (so ~3 times per 3 minutes), for as long as
-   the app stays open — regardless of which section the user is on. The
-   same rotation (video -> banner -> push-style -> repeat) keeps running
-   across section switches, so it stays consistent rather than resetting.
-   Waits for RichAds to report ready before the first fire, fixing the bug
-   where ads only worked after a manual page refresh. */
+   Fires an ad every 45 seconds (so ~4 times per 3 minutes) for as long as
+   the app stays open, regardless of which section the user is on — this
+   runs independently of the page-switch trigger above, so ads can appear
+   from either source. Waits for RichAds to report ready before the first
+   fire, fixing the bug where ads only worked after a manual page refresh. */
 const RICHADS_ROTATION=["triggerInterstitialVideo","triggerInterstitialBanner","triggerNativeNotification"];
 let richAdsRotationIdx=0;
 function fireNextRichAd(){
@@ -221,7 +222,7 @@ function startRichAdsRotation(){
    if(window.richAdsReady){
      clearInterval(waitForReady);
      fireNextRichAd();                       // first ad shortly after ready, no refresh needed
-     setInterval(fireNextRichAd,60000);       // then every 60s -> 3x per 3 minutes
+     setInterval(fireNextRichAd,45000);       // then every 45s -> 4x per 3 minutes
    } else if(waited>=10000){
      clearInterval(waitForReady);
      console.warn("RichAds: SDK never reported ready, rotation not started.");
