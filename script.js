@@ -72,6 +72,101 @@ async function refreshCurrent(){
 /* ledgerAdd removed — every RPC function now writes its own ledger
    row server-side, so the client never inserts into ledger. */
 
+/* ---------------- Terms / Privacy / Reward Rules modal ---------------- */
+const INFO_CONTENT={
+ terms:{title:"Terms & Conditions",body:`To maintain a fair and secure platform for all users, the following conditions must be met before any withdrawal request can be approved:
+
+• Users must complete the required ad-watching criteria as specified by the platform.
+• Users must watch reward ads normally and completely. Repeatedly skipping, closing, or abusing ads is not allowed.
+• Users must have genuine referral activity if referral requirements apply.
+• Fake referrals, self-referrals, multiple accounts, bots, VPN abuse, automated activity, or any suspicious behavior are strictly prohibited.
+• Users must comply with all platform rules and community guidelines.
+• The platform reserves the right to review account activity before approving withdrawals.
+• Any account found engaging in fraud, suspicious activity, or attempts to manipulate rewards may have its rewards, coins, or withdrawal privileges suspended or permanently removed.
+• Withdrawal requests will only be processed after all eligibility requirements and verification checks have been successfully completed.
+• The platform may modify reward rates, withdrawal limits, and eligibility requirements at any time.
+• By using this platform, you agree to these Terms & Conditions and all future updates.
+
+Withdrawal Eligibility
+A withdrawal can only be requested when:
+✅ Required ad-watching criteria are completed
+✅ Referral requirements (if applicable) are completed
+✅ No suspicious or fraudulent activity is detected
+✅ Account verification requirements are met
+✅ Minimum withdrawal amount is reached
+✅ All platform rules have been followed
+
+Failure to meet any of the above requirements may result in withdrawal rejection, delay, or account review.`},
+ privacy:{title:"Privacy Policy",body:`Your privacy is important to us. We are committed to protecting your personal information and providing a safe experience for all users.
+
+We collect only the information necessary to provide and improve our services, such as account details, reward activity, referrals, and transaction records.
+
+Your personal data is stored securely and protected using industry-standard security measures.
+
+We do not sell your personal information to third parties.
+
+Your data is used only for account management, rewards processing, security monitoring, fraud prevention, and platform improvements.
+
+We may collect anonymous usage statistics to help improve platform performance and user experience.
+
+User information may be shared with trusted service providers only when necessary to operate the platform or comply with legal requirements.
+
+We actively monitor for fraudulent activity, fake accounts, bots, and abuse to protect legitimate users and advertisers.
+
+Users are responsible for keeping their account credentials secure and confidential.
+
+While we take reasonable steps to protect user data, no online service can guarantee absolute security.
+
+By using this platform, you agree to the collection and use of information as described in this Privacy Policy.
+
+Your Data Is Safe
+✅ Your personal information is protected and securely stored.
+✅ We do not sell your personal data.
+✅ We use security measures to prevent unauthorized access.
+✅ We monitor the platform to protect users from fraud and abuse.
+✅ Your information is used only to operate and improve the platform.
+
+We are committed to maintaining a safe, secure, and trustworthy environment for all users. If you have any questions about your privacy or data security, please contact our support team.`},
+ rules:{title:"Reward Rules",body:`Welcome to our Rewards Platform! Follow these simple steps to earn and use coins.
+
+How to Earn Coins
+🪙 Watch reward ads and earn coins.
+🪙 Complete tasks and offers (if available).
+🪙 Invite friends using your referral code and earn bonus rewards.
+🪙 Participate in platform events and promotions.
+
+How to Use Your Coins
+🎮 Use your earned coins to play games on the platform.
+🎮 Different games may require different coin amounts to enter.
+🎮 Win games to earn more coins and increase your balance.
+🎮 Your game winnings will be added to your account balance automatically.
+
+Reward Rules
+1. Coins can only be earned through legitimate platform activities.
+2. Users must watch ads properly to receive rewards.
+3. Fake activity, bots, auto-clickers, multiple accounts, or abuse of the reward system are strictly prohibited.
+4. Rewards may be removed if suspicious activity is detected.
+5. Game results are final and cannot be manually changed by users.
+6. The platform reserves the right to adjust rewards, game rules, and earning rates when necessary.
+7. Users must follow all Terms & Conditions to remain eligible for rewards and withdrawals.
+
+Simple Guide
+Step 1: Watch Ads 📺 → Earn Coins 🪙
+Step 2: Use Coins 🪙 → Play Games 🎮
+Step 3: Win Games 🎮 → Earn More Coins 🪙
+Step 4: Complete Requirements ✅ → Request Withdrawal 💰
+
+Important
+Play fairly, watch ads normally, and follow platform rules. Honest users help keep the platform running and ensure rewards remain available for everyone. 🚀🪙`}
+};
+function openInfo(key){
+ const c=INFO_CONTENT[key]; if(!c) return;
+ $("infoTitle").textContent=c.title;
+ $("infoBody").textContent=c.body;
+ $("infoModal").classList.add("show");
+}
+function closeInfo(){ $("infoModal").classList.remove("show"); }
+
 /* ---------------- auth ---------------- */
 function page(p){
  document.querySelectorAll(".page").forEach(x=>x.hidden=x.id!==p);

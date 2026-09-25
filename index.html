@@ -80,6 +80,17 @@
     .wd-rows span{color:#b9b0d8;}
     .wd-rows b{text-align:right;overflow-wrap:anywhere;}
     .wd-done{width:100%;min-height:48px;border:0;border-radius:14px;font:inherit;font-weight:700;font-size:1rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#8b5cf6,#a855f7);}
+    .ad-notice{padding:12px 14px;text-align:left}
+    .ad-notice b{display:block;font-size:.78rem;color:#ffd84d;margin-bottom:6px}
+    .ad-notice ul{margin:0;padding-left:16px;list-style:disc}
+    .ad-notice li{font-size:.68rem;line-height:1.35;color:rgba(255,255,255,.75);margin-bottom:3px}
+    .ad-notice li:last-child{margin-bottom:0}
+    .info-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:9999}
+    .info-modal.show{display:flex}
+    .info-card{background:#1a1330;width:100%;max-width:480px;max-height:80vh;border-radius:20px 20px 0 0;padding:20px;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.5)}
+    .info-card h3{margin:0 0 12px;color:#fff}
+    .info-card .info-body{font-size:.8rem;line-height:1.55;color:rgba(255,255,255,.85);white-space:pre-wrap}
+    .info-close{margin-top:16px;width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(90deg,#8b5cf6,#ec4899);color:#fff;font-weight:700;font-size:.9rem}
   </style>
 </head>
 <body>
@@ -158,6 +169,17 @@
         <div id="ads" class="page" hidden>
           <div class="hero-banner hero-blue"><div class="hero-text"><p class="eyebrow">PLUS FOR YOU</p><h2>Watch Ads</h2><p class="hero-sub">Earn coins, unlock rewards!</p></div><span class="hero-icon">📺</span></div>
 
+          <div class="card ad-notice">
+            <b>⚠️ Important Notice</b>
+            <ul>
+              <li>Do not skip ads repeatedly.</li>
+              <li>Do not open and close ads too quickly.</li>
+              <li>Suspicious ad activity may result in rewards or withdrawals being restricted.</li>
+              <li>Every completed ad helps us earn revenue which allows us to provide withdrawal to users.</li>
+              <li>Please consider clicking on ads sometimes. This helps us earn more revenue and continue providing rewards to users.</li>
+            </ul>
+          </div>
+
           <div class="card" style="text-align:center">
             <div class="section-head"><span>🎬 Watch &amp; Earn</span></div>
             <p id="adMsg" class="muted" style="margin:4px 0 10px">Tap the button to watch an ad and earn coins.</p>
@@ -179,9 +201,7 @@
             <small>No cash value</small>
           </div>
           <div class="game-grid">
-            <button class="game-tile" id="balloon" onclick="openGame('balloon')"><span class="game-icon icon-orange">🎈</span><span><b>Balloon</b><small>Play for Game Points</small></span><em>Live</em></button>
             <button class="game-tile" id="vortex" onclick="openGame('vortex')"><span class="game-icon icon-teal">🌀</span><span><b>Vortex</b><small>Play for Game Points</small></span><em>Live</em></button>
-            <button class="game-tile" id="penalty" onclick="openGame('penalty')"><span class="game-icon icon-purple">⚽</span><span><b>Penalty Zones</b><small>Play for Game Points</small></span><em>Live</em></button>
             <button class="game-tile" id="thimbles" onclick="openGame('thimbles')"><span class="game-icon icon-blue">🎩</span><span><b>King Thimbles</b><small>Play for Game Points</small></span><em>Live</em></button>
             <button class="game-tile" id="skyflyer" onclick="openGame('skyflyer')"><span class="game-icon icon-orange">✈️</span><span><b>SkyFlyer</b><small>Play for Game Points</small></span><em>Live</em></button>
           </div>
@@ -237,10 +257,8 @@
               </div>
             </div>
             <div class="settings-list card">
-              <button><span class="icon-circle">⚙️</span><span class="settings-txt">Settings<small>App preferences &amp; security</small></span><i>›</i></button>
-              <button><span class="icon-circle">❓</span><span class="settings-txt">Help &amp; Support<small>Get help anytime</small></span><i>›</i></button>
-              <button><span class="icon-circle">📄</span><span class="settings-txt">Terms &amp; Conditions<small>Read our rules</small></span><i>›</i></button>
-              <button><span class="icon-circle">🛡️</span><span class="settings-txt">Reward Rules<small>How rewards work</small></span><i>›</i></button>
+              <button onclick="openInfo('terms')"><span class="icon-circle">📄</span><span class="settings-txt">Terms &amp; Conditions<small>Read our rules</small></span><i>›</i></button>
+              <button onclick="openInfo('rules')"><span class="icon-circle">🛡️</span><span class="settings-txt">Reward Rules<small>How rewards work</small></span><i>›</i></button>
               <button id="logout" class="danger"><span class="icon-circle icon-danger">🚪</span><span class="settings-txt">Log out<small>Sign out from your account</small></span><i>›</i></button>
             </div>
           </div>
@@ -292,11 +310,9 @@
               <p class="fineprint">You can only apply one referral code, and it cannot be changed afterward.</p>
             </div>
             <div class="settings-list card">
-              <button><span class="icon-circle">⚙️</span><span class="settings-txt">Settings<small>App preferences &amp; security</small></span><i>›</i></button>
-              <button><span class="icon-circle">❓</span><span class="settings-txt">Help &amp; Support<small>Get help anytime</small></span><i>›</i></button>
-              <button><span class="icon-circle">📄</span><span class="settings-txt">Terms &amp; Conditions<small>Read our rules</small></span><i>›</i></button>
-              <button><span class="icon-circle">🔒</span><span class="settings-txt">Privacy Policy<small>How we handle your data</small></span><i>›</i></button>
-              <button><span class="icon-circle">🛡️</span><span class="settings-txt">Reward Rules<small>How rewards work</small></span><i>›</i></button>
+              <button onclick="openInfo('terms')"><span class="icon-circle">📄</span><span class="settings-txt">Terms &amp; Conditions<small>Read our rules</small></span><i>›</i></button>
+              <button onclick="openInfo('privacy')"><span class="icon-circle">🔒</span><span class="settings-txt">Privacy Policy<small>How we handle your data</small></span><i>›</i></button>
+              <button onclick="openInfo('rules')"><span class="icon-circle">🛡️</span><span class="settings-txt">Reward Rules<small>How rewards work</small></span><i>›</i></button>
               <button id="logout2" class="danger"><span class="icon-circle icon-danger">🚪</span><span class="settings-txt">Log out<small>Sign out from your account</small></span><i>›</i></button>
             </div>
           </div>
@@ -314,18 +330,26 @@
   <div id="wdPopup" class="wd-pop" role="dialog" aria-modal="true" aria-labelledby="wdTitle">
     <div class="wd-card">
       <div class="wd-check" aria-hidden="true">✅</div>
-      <h3 id="wdTitle">Your withdrawal is pending</h3>
-      <p>Your withdrawal request has been received and is pending review.</p>
-      <div class="wd-time">Your withdrawal can take up to 7 working days</div>
+      <h3 id="wdTitle">Withdrawal submitted</h3>
+      <p>Your withdrawal request was submitted successfully.</p>
+      <div class="wd-time">You will get it in 7 working days</div>
       <div class="wd-rows">
         <div><span>Amount</span><b id="wdAmt">—</b></div>
         <div><span>Method</span><b id="wdMethod">—</b></div>
-        <div><span>Status</span><b>Pending</b></div>
+        <div><span>Status</span><b>Pending review</b></div>
       </div>
       <p style="font-size:.8rem;margin-bottom:14px">Payment is sent after verification. You can track it in your withdrawal history.</p>
       <button type="button" id="wdDone" class="wd-done">Done</button>
     </div>
   </div>
+  <div id="infoModal" class="info-modal">
+    <div class="info-card">
+      <h3 id="infoTitle">Terms &amp; Conditions</h3>
+      <div id="infoBody" class="info-body"></div>
+      <button type="button" class="info-close" onclick="closeInfo()">Close</button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script><script src="script.js?v=11"></script>
 
