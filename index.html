@@ -34,19 +34,17 @@
         window.TelegramAdsController=new TelegramAdsController();
         window.TelegramAdsController.initialize({ pubId:"1023471", appId:"9021" });
         window._richAdsLog("script loaded, initialize() called");
-        /* There's no real "ready" event from this SDK — a fixed delay was
-           used before to guess when it was safe to call, but on a slow/cold
-           mobile connection any ad attempt made BEFORE that guess elapsed
-           was just silently dropped with no retry queued at all. That's why
-           it only ever worked after a refresh (cached script -> guess
-           timer happened to be long enough).
-           Fix: treat the controller as usable the moment it's constructed,
-           and let every trigger call go through richAdsFireWithRetry() in
-           script.js, which retries failed calls with backoff. A failed call
-           because the SDK wasn't truly ready yet now self-corrects via
-           retry instead of being dropped. */
-        window.richAdsReady=true;
-        window._richAdsLog("richAdsReady=true (controller constructed)");
+        /* initialize() does its own setup work in the background before the
+           SDK is actually ready to serve ads, and how long that takes
+           depends on network speed — a fixed short delay can be too short
+           on a slow/cold mobile connection (which is exactly why this only
+           seemed to work after a refresh: by then tg-ob.js was already
+           browser-cached and initialize() finished fast). So this flips
+           richAdsReady on a generous timer AND script.js retries any failed
+           trigger call with backoff instead of giving up after one try —
+           between the two, a slow first load self-corrects instead of
+           needing a manual refresh. */
+        setTimeout(()=>{ window.richAdsReady=true; window._richAdsLog("richAdsReady=true"); }, 3000);
       } else {
         window._richAdsLog("TelegramAdsController script did not load (tg-ob.js failed or was blocked)");
       }
