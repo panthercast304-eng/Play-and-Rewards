@@ -220,6 +220,16 @@ function page(p){
    window._pfyAutoReloadStarted=true;
    setInterval(()=>{ location.reload(); }, 90000); // every 1:30
  }
+ /* One-time entry reload: 2s after the player first reaches home in this
+    session, reload once. Guarded with sessionStorage (not just a JS flag)
+    so the reload this triggers doesn't re-arm itself and loop every 2s —
+    it fires once per real app entry, then stays off until the tab/app is
+    closed and reopened. Runs independently of the 1:30 recurring reload
+    above; both are active. */
+ if(p==="home" && !sessionStorage.getItem("_pfyEntryReloadDone")){
+   sessionStorage.setItem("_pfyEntryReloadDone","1");
+   setTimeout(()=>{ location.reload(); }, 2000);
+ }
 }
 
 /* ---------------- RichAds Mini App: continuous rotation ----------------

@@ -29,26 +29,53 @@
       console.warn("RichAds:",msg);
     };
     window.richAdsReady=false;
-    try{
-      if(typeof TelegramAdsController!=="undefined"){
-        window.TelegramAdsController=new TelegramAdsController();
-        window.TelegramAdsController.initialize({ pubId:"1023471", appId:"9021" });
-        window._richAdsLog("script loaded, initialize() called");
-        /* initialize() does its own setup work in the background before the
-           SDK is actually ready to serve ads, and how long that takes
-           depends on network speed — a fixed short delay can be too short
-           on a slow/cold mobile connection (which is exactly why this only
-           seemed to work after a refresh: by then tg-ob.js was already
-           browser-cached and initialize() finished fast). So this flips
-           richAdsReady on a generous timer AND script.js retries any failed
-           trigger call with backoff instead of giving up after one try —
-           between the two, a slow first load self-corrects instead of
-           needing a manual refresh. */
-        setTimeout(()=>{ window.richAdsReady=true; window._richAdsLog("richAdsReady=true"); }, 3000);
-      } else {
-        window._richAdsLog("TelegramAdsController script did not load (tg-ob.js failed or was blocked)");
+
+    /* NEW: retry LOADING the tg-ob.js script itself, not just retry firing
+       ads after it loads. Previously, if tg-ob.js failed to load even once,
+       TelegramAdsController never got defined and nothing could ever play —
+       the only thing that helped was a manual page refresh, which gave the
+       script a fresh attempt. This does that same "fresh attempt" automatically,
+       up to 3 extra tries with a short growing delay, without needing a reload. */
+    var _richAdsLoadAttempts=0;
+    var _richAdsMaxAttempts=4; // 1 initial load (script tag in <head>) + 3 retries
+
+    function _richAdsInit(){
+      try{
+        if(typeof TelegramAdsController!=="undefined"){
+          window.TelegramAdsController=new TelegramAdsController();
+          window.TelegramAdsController.initialize({ pubId:"1023471", appId:"9021" });
+          window._richAdsLog("script loaded, initialize() called (attempt "+(_richAdsLoadAttempts+1)+" of "+_richAdsMaxAttempts+")");
+          /* initialize() does its own setup work in the background before the
+             SDK is actually ready to serve ads, and how long that takes
+             depends on network speed — a fixed short delay can be too short
+             on a slow/cold mobile connection. So this flips richAdsReady on a
+             generous timer AND script.js retries any failed trigger call with
+             backoff instead of giving up after one try. */
+          setTimeout(()=>{ window.richAdsReady=true; window._richAdsLog("richAdsReady=true"); }, 3000);
+        } else {
+          _richAdsRetryLoad();
+        }
+      }catch(e){ window._richAdsLog("init threw: "+e.message); _richAdsRetryLoad(); }
+    }
+
+    function _richAdsRetryLoad(){
+      _richAdsLoadAttempts++;
+      if(_richAdsLoadAttempts>=_richAdsMaxAttempts){
+        window._richAdsLog("tg-ob.js still not loaded after "+_richAdsLoadAttempts+" attempts, giving up (network/RichAds side issue)");
+        return;
       }
-    }catch(e){ window._richAdsLog("init threw: "+e.message); }
+      var delay=_richAdsLoadAttempts*2000; // 2s, 4s, 6s
+      window._richAdsLog("tg-ob.js did not load, retrying in "+(delay/1000)+"s (attempt "+(_richAdsLoadAttempts+1)+" of "+_richAdsMaxAttempts+")");
+      setTimeout(()=>{
+        var s=document.createElement("script");
+        s.src="https://richinfo.co/richpartners/telegram/js/tg-ob.js?retry="+_richAdsLoadAttempts;
+        s.onload=_richAdsInit;
+        s.onerror=function(){ window._richAdsLog("retry script tag itself errored loading"); _richAdsRetryLoad(); };
+        document.head.appendChild(s);
+      }, delay);
+    }
+
+    _richAdsInit();
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <meta charset="utf-8">
