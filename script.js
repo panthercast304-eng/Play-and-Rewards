@@ -788,6 +788,20 @@ function releaseNetwork(net){
   try{ localStorage.removeItem("adHold_"+net.name); }catch(e){}
 }
 
+/* Onclicka TMA rewarded video (spot 6152749) — init returns a promise that
+   resolves to a "show" function once the ad engine is ready. Cached so we
+   only call initCdTma() once; ready() just reports whether that finished. */
+let onclickaShow=null, onclickaInitPromise=null;
+function ensureOnclicka(){
+  if(onclickaShow) return true;
+  if(!onclickaInitPromise && typeof window.initCdTma==="function"){
+    onclickaInitPromise=window.initCdTma({id:"6152749"})
+      .then(show=>{ onclickaShow=show; })
+      .catch(e=>console.warn("Onclicka init failed:",e));
+  }
+  return !!onclickaShow;
+}
+
 /* play() only shows the ad and resolves once it has been watched. Coins are given afterwards. */
 const AD_NETWORKS=[
   { name:"TADS", source:"tads_ad",
@@ -807,7 +821,10 @@ const AD_NETWORKS=[
     play:async()=>{ await window.showadsbitvex(); } },
   { name:"GigaPub", source:"gigapub_ad",
     ready:()=>typeof window.showGiga==="function",
-    play:async()=>{ await window.showGiga(); } }
+    play:async()=>{ await window.showGiga(); } },
+  { name:"Onclicka", source:"onclicka_ad",
+    ready:()=>ensureOnclicka(),
+    play:async()=>{ await onclickaShow(); } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
