@@ -17,8 +17,21 @@
   <script async src='//libtl.com/sdk.js' data-zone='11834570' data-sdk='show_11834570'></script>
   <!-- MyBid (mbidadm) — banner formats 300x250 and 300x100, placed on home and ads pages -->
   <script async src="https://js.mbidadm.com/static/scripts.js" data-admpid="466097"></script>
-  <!-- Onclicka (TMA Rewarded video, spot 6152749) -->
-  <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+  <!-- Telega.io -->
+  <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
+  <script>
+    try{
+      if(window.TelegaIn && window.TelegaIn.AdsController){
+        window.telegaAds = window.TelegaIn.AdsController.create_miniapp({
+          token: "68042659-e6b4-418f-82b4-e96c89f54ef6"
+        });
+      } else {
+        window._richAdsLog && window._richAdsLog("Telega: sdk.js did not load (TelegaIn undefined)");
+      }
+    }catch(e){
+      window._richAdsLog && window._richAdsLog("Telega init threw: "+e.message);
+    }
+  </script>
   <!-- RichAds Telegram Mini App (all 5 formats: push-style, interstitial banner,
        interstitial video, embedded banner, playable) -->
   <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>

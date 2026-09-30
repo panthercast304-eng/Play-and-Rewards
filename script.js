@@ -206,11 +206,11 @@ function page(p){
     visible — the Ads page is hidden until the user taps the Ads tab, and some
     ad SDKs fail to render into a hidden (zero-size) container. */
  if(p==="ads"){ try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); } }
- /* RichAds: fire an ad on every tab/section switch (home/ads/games/profile),
-    in addition to the standalone timer below — both run together, so ads
-    can show from navigation OR just from time passing, whichever comes
-    first. fireNextRichAd() already no-ops quietly if the SDK isn't ready
-    yet, so this is safe to call unconditionally. */
+ /* RichAds: fire an ad on every tab/section switch (home/ads/games/profile).
+    This is now the ONLY thing that triggers RichAds — the standalone 45s
+    timer that used to fire regardless of navigation has been removed.
+    fireNextRichAd() already no-ops quietly if the SDK isn't ready yet, so
+    this is safe to call unconditionally. */
  try{ fireNextRichAd(); }catch(e){ console.warn("RichAds page-switch trigger failed:",e); }
  /* Recurring auto-refresh: once the player reaches home, reload the whole
     app every 1:30 for as long as the session stays open (in case
@@ -232,21 +232,19 @@ function page(p){
  }
 }
 
-/* ---------------- RichAds Mini App: continuous rotation ----------------
-   Fires an ad every 45 seconds (so ~4 times per 3 minutes) for as long as
-   the app stays open, regardless of which section the user is on — this
-   runs independently of the page-switch trigger above, so ads can appear
-   from either source. Waits for RichAds to report ready before the first
-   fire.
+/* ---------------- RichAds Mini App: page-switch trigger only ----------------
+   RichAds now fires ONLY when the player switches between sections
+   (home/ads/games/profile) — see fireNextRichAd() call in page(). The
+   standalone 45-second recurring timer that used to fire regardless of
+   navigation has been removed by request.
+   startRichAdsRotation() below still exists, but only to wait for the SDK
+   to report ready (window.richAdsReady) before page-switch triggers start
+   actually doing anything — it does not fire anything on its own anymore.
    IMPORTANT: window.richAdsReady flipping true is a best-guess timer, not
    a real "the SDK can actually serve now" signal — on a slow/cold mobile
    connection it can flip early, before the SDK's internal setup is truly
-   done, and the trigger call below rejects. Previously that single failed
-   attempt was just logged and dropped, so nothing played again until the
-   next scheduled tick (or, in practice, until the user manually refreshed
-   and the SDK happened to init faster from cache). Now a failed attempt
-   retries itself with backoff (2s, 4s, 8s, 16s) instead of waiting for the
-   next tick, so a slow first load self-corrects. */
+   done, and the trigger call below rejects. That's fine here: a failed
+   call is just logged, and the player's next tab switch will try again. */
 /* triggerInterstitialVideo removed from rotation: its RichAds dashboard
    traffic source (#408115) shows 0 clicks/revenue ever, and it fails every
    single call with the same internal SDK error — a real config problem on
@@ -271,27 +269,20 @@ function richAdsFireWithRetry(method,attempt){
      return;
    }
    ctrl[method]().then(()=>{
-     window._richAdsLog&&window._richAdsLog(method+": played ok"+(attempt?(" (after retry "+attempt+")"):""));
+     window._richAdsLog&&window._richAdsLog(method+": played ok");
    }).catch(e=>{
-     window._richAdsLog&&window._richAdsLog(method+" failed (attempt "+attempt+"): "+(e&&e.message?e.message:e));
-     if(attempt<4){
-       setTimeout(()=>richAdsFireWithRetry(method,attempt+1), 2000*Math.pow(2,attempt));
-     }
+     // No retry here — if this call fails, just log it and let the next
+     // section switch trigger the next attempt.
+     window._richAdsLog&&window._richAdsLog(method+" failed: "+(e&&e.message?e.message:e));
    });
  }catch(e){ window._richAdsLog&&window._richAdsLog(method+" threw: "+e.message); }
 }
 function startRichAdsRotation(){
- // Wait for the SDK to report ready (set in index.html after initialize())
- // before starting; keep checking every 500ms — no giving up. On a very
- // slow connection this may take a while, but it will start as soon as
- // the flag flips rather than requiring a refresh.
- const waitForReady=setInterval(()=>{
-   if(window.richAdsReady){
-     clearInterval(waitForReady);
-     fireNextRichAd();                       // first ad shortly after ready, no refresh needed
-     setInterval(fireNextRichAd,45000);       // then every 45s -> 4x per 3 minutes
-   }
- },500);
+ // No longer starts a recurring timer — page-switch triggers call
+ // fireNextRichAd() directly, which already no-ops until richAdsReady is
+ // true. This function is kept only so the existing call site doesn't
+ // need to change, and in case future setup work needs a place to run
+ // once the SDK is ready.
 }
 
 async function enter(isSignup){
@@ -788,20 +779,6 @@ function releaseNetwork(net){
   try{ localStorage.removeItem("adHold_"+net.name); }catch(e){}
 }
 
-/* Onclicka TMA rewarded video (spot 6152749) — init returns a promise that
-   resolves to a "show" function once the ad engine is ready. Cached so we
-   only call initCdTma() once; ready() just reports whether that finished. */
-let onclickaShow=null, onclickaInitPromise=null;
-function ensureOnclicka(){
-  if(onclickaShow) return true;
-  if(!onclickaInitPromise && typeof window.initCdTma==="function"){
-    onclickaInitPromise=window.initCdTma({id:"6152749"})
-      .then(show=>{ onclickaShow=show; })
-      .catch(e=>console.warn("Onclicka init failed:",e));
-  }
-  return !!onclickaShow;
-}
-
 /* play() only shows the ad and resolves once it has been watched. Coins are given afterwards. */
 const AD_NETWORKS=[
   { name:"TADS", source:"tads_ad",
@@ -822,9 +799,9 @@ const AD_NETWORKS=[
   { name:"GigaPub", source:"gigapub_ad",
     ready:()=>typeof window.showGiga==="function",
     play:async()=>{ await window.showGiga(); } },
-  { name:"Onclicka", source:"onclicka_ad",
-    ready:()=>ensureOnclicka(),
-    play:async()=>{ await onclickaShow(); } }
+  { name:"Telega", source:"telega_ad",
+    ready:()=>typeof window.telegaAds!=="undefined" && !!window.telegaAds,
+    play:async()=>{ await window.telegaAds.ad_show({ adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5" }); } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
