@@ -21,6 +21,14 @@
   <script async src="https://js.mbidadm.com/static/scripts.js" data-admpid="466097"></script>
   <!-- Telega.io -->
   <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
+  <!-- Adcash Autotag (zone 7o1ytanbta) — auto-detects placements; can include
+       push notifications and popunders, not a placed banner or opt-in ad. -->
+  <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
+  <script type="text/javascript">
+    try{
+      aclib.runAutoTag({ zoneId: '7o1ytanbta' });
+    }catch(e){ console.warn("Adcash init failed:",e); }
+  </script>
   <script>
     try{
       if(window.TelegaIn && window.TelegaIn.AdsController){
