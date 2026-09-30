@@ -13,6 +13,8 @@
   </script>
   <script async src="https://w.tads.me/widget.js"></script>
   <script async src="https://sdk.adsbitvex.com/functions/v1/ad-script?appid=000449"></script>
+  <!-- Adsbitvex banner placement (separate SDK endpoint from the rewarded-ad script above) -->
+  <script async src="https://sdk.adsbitvex.com/functions/v1/banner-serve?action=sdk"></script>
   <script async src="https://ad.gigapub.tech/script?id=8277"></script>
   <script async src='//libtl.com/sdk.js' data-zone='11834570' data-sdk='show_11834570'></script>
   <!-- MyBid (mbidadm) — banner formats 300x250 and 300x100, placed on home and ads pages -->
@@ -289,6 +291,12 @@
             </div>
             <ol class="leaderboard" id="leaderboardList"></ol>
           </div>
+
+          <!-- Adsbitvex banner 300x250 -->
+          <div class="card" style="text-align:center">
+            <div data-abx-banner="178f1ee10af3" data-abx-w="300" data-abx-h="250" style="display:inline-block;width:300px;height:250px;line-height:0"></div>
+          </div>
+
           <div id="game"></div>
         </div>
 
