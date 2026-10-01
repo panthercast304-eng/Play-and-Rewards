@@ -21,14 +21,6 @@
   <script async src="https://js.mbidadm.com/static/scripts.js" data-admpid="466097"></script>
   <!-- Telega.io -->
   <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
-  <!-- Adcash Autotag (zone 7o1ytanbta) — auto-detects placements; can include
-       push notifications and popunders, not a placed banner or opt-in ad. -->
-  <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
-  <script type="text/javascript">
-    try{
-      aclib.runAutoTag({ zoneId: '7o1ytanbta' });
-    }catch(e){ console.warn("Adcash init failed:",e); }
-  </script>
   <script>
     try{
       if(window.TelegaIn && window.TelegaIn.AdsController){
@@ -36,73 +28,11 @@
           token: "68042659-e6b4-418f-82b4-e96c89f54ef6"
         });
       } else {
-        window._richAdsLog && window._richAdsLog("Telega: sdk.js did not load (TelegaIn undefined)");
+        console.warn("Telega: sdk.js did not load (TelegaIn undefined)");
       }
     }catch(e){
-      window._richAdsLog && window._richAdsLog("Telega init threw: "+e.message);
+      console.warn("Telega init threw: "+e.message);
     }
-  </script>
-  <!-- RichAds Telegram Mini App (all 5 formats: push-style, interstitial banner,
-       interstitial video, embedded banner, playable) -->
-  <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-  <script>
-    /* Tiny in-memory log for RichAds status, so this can be inspected on a
-       phone inside Telegram (no devtools needed) — see the debug panel
-       wired up in script.js (triple-tap the header title to open it). */
-    window.richAdsLog=[];
-    window._richAdsLog=function(msg){
-      window.richAdsLog.push(new Date().toLocaleTimeString()+" — "+msg);
-      if(window.richAdsLog.length>40) window.richAdsLog.shift();
-      console.warn("RichAds:",msg);
-    };
-    window.richAdsReady=false;
-
-    /* NEW: retry LOADING the tg-ob.js script itself, not just retry firing
-       ads after it loads. Previously, if tg-ob.js failed to load even once,
-       TelegramAdsController never got defined and nothing could ever play —
-       the only thing that helped was a manual page refresh, which gave the
-       script a fresh attempt. This does that same "fresh attempt" automatically,
-       up to 3 extra tries with a short growing delay, without needing a reload. */
-    var _richAdsLoadAttempts=0;
-    var _richAdsMaxAttempts=4; // 1 initial load (script tag in <head>) + 3 retries
-
-    function _richAdsInit(){
-      try{
-        if(typeof TelegramAdsController!=="undefined"){
-          window.TelegramAdsController=new TelegramAdsController();
-          window.TelegramAdsController.initialize({ pubId:"1023471", appId:"9021" });
-          window._richAdsLog("script loaded, initialize() called (attempt "+(_richAdsLoadAttempts+1)+" of "+_richAdsMaxAttempts+")");
-          /* initialize() does its own setup work in the background before the
-             SDK is actually ready to serve ads, and how long that takes
-             depends on network speed — a fixed short delay can be too short
-             on a slow/cold mobile connection. So this flips richAdsReady on a
-             generous timer AND script.js retries any failed trigger call with
-             backoff instead of giving up after one try. */
-          setTimeout(()=>{ window.richAdsReady=true; window._richAdsLog("richAdsReady=true"); }, 3000);
-        } else {
-          _richAdsRetryLoad();
-        }
-      }catch(e){ window._richAdsLog("init threw: "+e.message); _richAdsRetryLoad(); }
-    }
-
-    function _richAdsRetryLoad(){
-      _richAdsLoadAttempts++;
-      if(_richAdsLoadAttempts>=_richAdsMaxAttempts){
-        window._richAdsLog("tg-ob.js still not loaded after "+_richAdsLoadAttempts+" attempts, giving up (network/RichAds side issue)");
-        return;
-      }
-      var delay=_richAdsLoadAttempts*2000; // 2s, 4s, 6s
-      window._richAdsLog("tg-ob.js did not load, retrying in "+(delay/1000)+"s (attempt "+(_richAdsLoadAttempts+1)+" of "+_richAdsMaxAttempts+")");
-      setTimeout(()=>{
-        var s=document.createElement("script");
-        s.src="https://richinfo.co/richpartners/telegram/js/tg-ob.js?retry="+_richAdsLoadAttempts;
-        s.onload=_richAdsInit;
-        s.onerror=function(){ window._richAdsLog("retry script tag itself errored loading"); _richAdsRetryLoad(); };
-        document.head.appendChild(s);
-      }, delay);
-    }
-
-    _richAdsInit();
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <meta charset="utf-8">
@@ -441,20 +371,8 @@
     </div>
   </div>
 
-  <!-- Hidden diagnostic panel: triple-tap the header title to open. Shows
-       the RichAds status log so this can be read on-device inside Telegram
-       without a computer/devtools. Temporary — safe to remove once RichAds
-       is confirmed stable. -->
-  <div id="richDebugModal" class="info-modal">
-    <div class="info-card">
-      <h3>RichAds Debug Log</h3>
-      <div id="richDebugBody" class="info-body" style="white-space:pre-wrap;font-family:monospace;font-size:12px;"></div>
-      <button type="button" class="info-close" onclick="closeRichDebug()">Close</button>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script><script src="script.js?v=17"></script>
+  <script src="config.js"></script><script src="script.js?v=18"></script>
 
   <!-- Inline game overlay (added: embeds the 8 games directly in this file) -->
   <style>
