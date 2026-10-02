@@ -682,6 +682,17 @@ function releaseNetwork(net){
   try{ localStorage.removeItem("adHold_"+net.name); }catch(e){}
 }
 
+/* Telega: create the controller lazily (retries if the SDK loaded late) */
+function getTelega(){
+  if(window.telegaAds) return window.telegaAds;
+  try{
+    if(window.TelegaIn && window.TelegaIn.AdsController){
+      window.telegaAds=window.TelegaIn.AdsController.create_miniapp({ token:"68042659-e6b4-418f-82b4-e96c89f54ef6" });
+    }
+  }catch(e){ console.warn("Telega init failed:",e); }
+  return window.telegaAds||null;
+}
+
 /* play() only shows the ad and resolves once it has been watched. Coins are given afterwards. */
 const AD_NETWORKS=[
   { name:"TADS", source:"tads_ad",
@@ -703,8 +714,8 @@ const AD_NETWORKS=[
     ready:()=>typeof window.showGiga==="function",
     play:async()=>{ await window.showGiga(); } },
   { name:"Telega", source:"telega_ad",
-    ready:()=>typeof window.telegaAds!=="undefined" && !!window.telegaAds,
-    play:async()=>{ await window.telegaAds.ad_show({ adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5" }); } }
+    ready:()=>!!getTelega(),
+    play:async()=>{ await getTelega().ad_show({ adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5" }); } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
