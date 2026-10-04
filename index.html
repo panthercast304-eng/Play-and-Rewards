@@ -17,8 +17,8 @@
   <script async src="https://sdk.adsbitvex.com/functions/v1/banner-serve?action=sdk"></script>
   <script async src="https://ad.gigapub.tech/script?id=8277"></script>
   <script async src='//libtl.com/sdk.js' data-zone='11834570' data-sdk='show_11834570'></script>
-  <!-- MyBid (mbidadm) — banner formats 300x250 and 300x100, placed on home and ads pages -->
-  <script async src="https://js.mbidadm.com/static/scripts.js" data-admpid="466814"></script>
+  <!-- Monetag In-Page Push (zone 11953278) -->
+  <script>(function(s){s.dataset.zone='11953278',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Telega.io (Telegram WebApp script must load first) -->
   <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
@@ -34,6 +34,27 @@
     }catch(e){
       console.warn("Telega init threw: "+e.message);
     }
+  </script>
+  <!-- RichAds Telegram Mini App SDK (no auto-refresh; one interstitial per session, triggered from script.js) -->
+  <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+  <script>
+    (function(){
+      window.richAdsReady=false;
+      function init(){
+        try{
+          if(typeof TelegramAdsController!=="undefined"){
+            window.TelegramAdsController=new TelegramAdsController();
+            window.TelegramAdsController.initialize({ pubId:"1023471", appId:"9021" });
+            setTimeout(function(){ window.richAdsReady=true; },3000);
+            return true;
+          }
+        }catch(e){ console.warn("RichAds init failed:",e); }
+        return false;
+      }
+      if(!init()){
+        var n=0, t=setInterval(function(){ if(init()||++n>10) clearInterval(t); },1000);
+      }
+    })();
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -139,11 +160,6 @@
             <p class="fineprint" style="margin-top:10px">ⓘ Balances &amp; withdrawals are subject to verification and applicable terms.</p>
           </div>
 
-          <!-- MyBid banner 300x250 -->
-          <div class="card" style="text-align:center">
-            <div data-banner-id="2029253"></div>
-          </div>
-
           <div class="action-grid">
             <button class="action-tile" data-page="ads">
               <span class="icon-box purple">📺</span><span><b>Watch Ads</b><small>Earn coins</small></span><i>›</i>
@@ -202,10 +218,6 @@
             <div id="tads-container-12267"></div>
           </div>
 
-          <!-- MyBid banner 300x100 -->
-          <div class="card" style="text-align:center">
-            <div data-banner-id="2029254"></div>
-          </div>
         </div>
 
         <!-- GAMES -->
@@ -376,7 +388,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script><script src="script.js?v=21"></script>
+  <script src="config.js"></script><script src="script.js?v=26"></script>
 
   <!-- Inline game overlay (added: embeds the 8 games directly in this file) -->
   <style>

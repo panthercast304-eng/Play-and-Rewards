@@ -188,6 +188,37 @@ function page(p){
  if(p==="ads"){ try{ ensureTadsBanner(); }catch(e){ console.warn("TADS banner init failed:",e); } }
 }
 
+/* ---------------- RichAds: one ad of each format per session ----------------
+   Runs every "trigger..." format the RichAds SDK exposes (interstitial banner,
+   push-style, video, playable...), one at a time, at least 2 minutes apart,
+   max 4 per session. No auto-refresh, no firing on tab switches. */
+let _richAdsSeqStarted=false;
+function startRichAdsSequence(){
+  if(_richAdsSeqStarted) return;
+  _richAdsSeqStarted=true;
+  let queue=null, tries=0;
+  const prefer=["triggerInterstitialBanner","triggerNativeNotification","triggerInterstitialVideo","triggerPlayableAds"];
+  function next(){
+    try{
+      const ctrl=window.TelegramAdsController;
+      if(!ctrl || !window.richAdsReady){
+        if(++tries<8) setTimeout(next,5000);
+        return;
+      }
+      if(!queue){
+        const all=Object.getOwnPropertyNames(Object.getPrototypeOf(ctrl)).filter(n=>/^trigger/i.test(n)&&typeof ctrl[n]==="function");
+        console.log("RichAds formats available:",all.join(", ")||"(none)");
+        queue=prefer.filter(n=>all.includes(n)).concat(all.filter(n=>!prefer.includes(n))).slice(0,4);
+      }
+      const m=queue.shift();
+      if(!m) return;
+      Promise.resolve(ctrl[m]()).catch(e=>console.warn("RichAds "+m+" failed:",e&&e.message?e.message:e));
+      if(queue.length) setTimeout(next,120000);
+    }catch(e){ console.warn("RichAds trigger failed:",e); }
+  }
+  next();
+}
+
 async function enter(isSignup){
  const e=$("email").value.trim().toLowerCase(),p=$("password").value;
  if(!e||!p){$("msg").textContent="Enter email and password.";return}
@@ -610,7 +641,7 @@ const FAST_FAIL_MS=8000;       // failing faster than this = "no ad available"
 // true  = if a network fails, start the next network immediately (can overlap with an
 //         error popup that a network is still showing).
 const AUTO_FALLBACK=false;
-const NET_HOLD_MS=60*60*1000;  // a network that failed fast is skipped for 1 hour
+const NET_HOLD_MS=15*60*1000;  // a network that failed fast is skipped for 15 minutes
 const TADS_WIDGET_ID="12224";
 let tadsController=null, tadsPending=null;
 
@@ -726,14 +757,15 @@ async function tryNetwork(net){
   catch(e){
     console.log(net.name+" ad failed:",e);
     const elapsed=Date.now()-t0;
+    let errTxt=""; try{ errTxt=(e&&e.message)?e.message:(typeof e==="string"?e:JSON.stringify(e)); }catch(_){}
     if(e&&e.closed) return {ok:false,stopMsg:"Ad closed early — no coins earned. Tap to try again."};
-    if(elapsed<FAST_FAIL_MS){ holdNetwork(net); return {ok:false,noAd:true}; }         // no ad from this network
+    if(elapsed<FAST_FAIL_MS){ holdNetwork(net); return {ok:false,noAd:true,err:errTxt}; }         // no ad from this network
     return {ok:false,stopMsg:"Ad closed early — no coins earned. Tap to try again."};   // user closed a real ad
   }
   if((Date.now()-t0)<(net.minMs||MIN_AD_MS)){           // "finished" too fast = no real ad
     console.log(net.name+" finished too fast — no coins given");
     holdNetwork(net);
-    return {ok:false,noAd:true};
+    return {ok:false,noAd:true,err:"finished too fast"};
   }
   try{ await creditAdCoins(net.source); }
   catch(e){ return {ok:false,stopMsg:(e&&e.stopMsg)||"Ad watched, but the coins could not be saved."}; }
@@ -744,6 +776,8 @@ async function tryNetwork(net){
 // Shows which network is being tried, so you can tell which one an ad or popup came from.
 // Set to false when you no longer need it.
 const SHOW_AD_NETWORK_NAME=true;
+// Shows the network's error text in brackets when it has no ad (for testing). Set to false later.
+const SHOW_AD_ERRORS=true;
 const adLabel=n=>SHOW_AD_NETWORK_NAME?" ("+n.name+")":"";
 
 let adBusy=false;
@@ -769,7 +803,7 @@ async function watchAd(){
       const r=await tryNetwork(net);
       if(r.ok){ lastAdNetworkName=net.name; if(msg)msg.textContent=r.msg+adLabel(net); return; }
       if(r.stopMsg){ lastAdNetworkName=net.name; if(msg)msg.textContent=r.stopMsg+adLabel(net); return; }
-      if(!AUTO_FALLBACK){ if(msg)msg.textContent="No ad from this network right now — tap Watch Ad again"+adLabel(net); return; }
+      if(!AUTO_FALLBACK){ if(msg)msg.textContent="No ad from this network right now — tap Watch Ad again"+adLabel(net)+(SHOW_AD_ERRORS&&r.err?" ["+String(r.err).slice(0,80)+"]":""); return; }
     }
     if(msg)msg.textContent="No ad available right now — try again shortly.";
   }finally{
@@ -815,6 +849,10 @@ function doShare(){const u=referralLink();try{navigator.share({title:"PLUS FOR Y
          });
        }
      }catch(e){ console.warn("Monetag in-app interstitial init failed:",e); }
+
+     /* RichAds ads: sequence starts 30s after the app opens
+        (after Monetag's first in-app ad, so they don't overlap). */
+     setTimeout(startRichAdsSequence,30000);
 
      /* ---------------- capture Telegram ID (for AdsGram reward postback) ----
         If this page is opened inside Telegram (as a Mini App), Telegram
