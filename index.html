@@ -20,21 +20,6 @@
   <!-- Monetag In-Page Push (zone 11953278) -->
   <script>(function(s){s.dataset.zone='11953278',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Telega.io (Telegram WebApp script must load first) -->
-  <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
-  <script>
-    try{
-      if(window.TelegaIn && window.TelegaIn.AdsController){
-        window.telegaAds = window.TelegaIn.AdsController.create_miniapp({
-          token: "68042659-e6b4-418f-82b4-e96c89f54ef6"
-        });
-      } else {
-        console.warn("Telega: sdk.js did not load (TelegaIn undefined)");
-      }
-    }catch(e){
-      console.warn("Telega init threw: "+e.message);
-    }
-  </script>
   <!-- RichAds Telegram Mini App SDK (no auto-refresh; one interstitial per session, triggered from script.js) -->
   <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
   <script>
@@ -388,7 +373,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script><script src="script.js?v=27"></script>
+  <!-- Telega.io SDK: placed just before </body> as Telega's guide says; script.js starts it when needed -->
+  <script src="https://inapp.telega.io/sdk/v1/sdk.js"></script>
+  <script src="config.js"></script><script src="script.js?v=28"></script>
 
   <!-- Inline game overlay (added: embeds the 8 games directly in this file) -->
   <style>
