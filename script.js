@@ -1,3 +1,10 @@
+/* Remove any push-notification service worker left over from an ad network. */
+try{
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+  }
+}catch(e){}
+
 (()=>{"use strict";
 /* ============================================================
    PLUS FOR YOU — Supabase-backed front end
@@ -713,17 +720,6 @@ function releaseNetwork(net){
   try{ localStorage.removeItem("adHold_"+net.name); }catch(e){}
 }
 
-/* Telega: create the controller lazily (retries if the SDK loaded late) */
-function getTelega(){
-  if(window.telegaAds) return window.telegaAds;
-  try{
-    if(window.TelegaIn && window.TelegaIn.AdsController){
-      window.telegaAds=window.TelegaIn.AdsController.create_miniapp({ token:"68042659-e6b4-418f-82b4-e96c89f54ef6" });
-    }
-  }catch(e){ console.warn("Telega init failed:",e); }
-  return window.telegaAds||null;
-}
-
 /* play() only shows the ad and resolves once it has been watched. Coins are given afterwards. */
 const AD_NETWORKS=[
   { name:"TADS", source:"tads_ad",
@@ -743,10 +739,7 @@ const AD_NETWORKS=[
     play:async()=>{ await window.showadsbitvex(); } },
   { name:"GigaPub", source:"gigapub_ad",
     ready:()=>typeof window.showGiga==="function",
-    play:async()=>{ await window.showGiga(); } },
-  { name:"Telega", source:"telega_ad",
-    ready:()=>!!getTelega(),
-    play:async()=>{ await getTelega().ad_show({ adBlockUuid:"a4fd8e9f-d01d-46ee-882c-e365d1ba48a5" }); } }
+    play:async()=>{ await window.showGiga(); } }
 ];
 
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const k=Math.floor(Math.random()*(i+1)); [a[i],a[k]]=[a[k],a[i]]; } return a; }
@@ -808,8 +801,6 @@ async function watchAd(){
     if(msg)msg.textContent="No ad available right now — try again shortly.";
   }finally{
     adBusy=false; btn.disabled=false; btn.textContent="🎬 Watch Ad — Earn Coins";
-    /* testing hint: tells you if Telega is missing from the rotation because its SDK did not load */
-    try{ if(SHOW_AD_ERRORS && msg && !getTelega()) msg.textContent+=" | Telega SDK not loaded"; }catch(_){}
   }
 }
 if($("watchAdBtn"))$("watchAdBtn").onclick=watchAd;
