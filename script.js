@@ -808,6 +808,8 @@ async function watchAd(){
     if(msg)msg.textContent="No ad available right now — try again shortly.";
   }finally{
     adBusy=false; btn.disabled=false; btn.textContent="🎬 Watch Ad — Earn Coins";
+    /* testing hint: tells you if Telega is missing from the rotation because its SDK did not load */
+    try{ if(SHOW_AD_ERRORS && msg && !getTelega()) msg.textContent+=" | Telega SDK not loaded"; }catch(_){}
   }
 }
 if($("watchAdBtn"))$("watchAdBtn").onclick=watchAd;
