@@ -197,8 +197,8 @@ function page(p){
 
 /* ---------------- RichAds: one ad of each format per session ----------------
    Runs every "trigger..." format the RichAds SDK exposes (interstitial banner,
-   push-style, video, playable...), one at a time, at least 2 minutes apart,
-   max 4 per session. No auto-refresh, no firing on tab switches. */
+   push-style, video, playable...), one at a time, 1 minute apart,
+   every available format once per session. No auto-refresh, no firing on tab switches. */
 let _richAdsSeqStarted=false;
 function startRichAdsSequence(){
   if(_richAdsSeqStarted) return;
@@ -215,12 +215,12 @@ function startRichAdsSequence(){
       if(!queue){
         const all=Object.getOwnPropertyNames(Object.getPrototypeOf(ctrl)).filter(n=>/^trigger/i.test(n)&&typeof ctrl[n]==="function");
         console.log("RichAds formats available:",all.join(", ")||"(none)");
-        queue=prefer.filter(n=>all.includes(n)).concat(all.filter(n=>!prefer.includes(n))).slice(0,4);
+        queue=prefer.filter(n=>all.includes(n)).concat(all.filter(n=>!prefer.includes(n))).slice(0,6);  // every RichAds format the SDK exposes, once per session
       }
       const m=queue.shift();
       if(!m) return;
       Promise.resolve(ctrl[m]()).catch(e=>console.warn("RichAds "+m+" failed:",e&&e.message?e.message:e));
-      if(queue.length) setTimeout(next,120000);
+      if(queue.length) setTimeout(next,60000);
     }catch(e){ console.warn("RichAds trigger failed:",e); }
   }
   next();
@@ -293,7 +293,8 @@ async function claimReferralBonus(){
 /* REAL_AD_COINS: reward amount for AdsGram's rewarded ad, credited
    server-side via the adsgram-reward Edge Function postback. */
 const REAL_AD_COINS=200;
-const WITHDRAW_MIN=50000; // minimum coins per withdrawal request
+const WITHDRAW_MIN=30000;
+const COINS_PER_INR=30; // 30 coins = ₹1  (30,000 coins = ₹1,000) // minimum coins per withdrawal request
 
 /* ---------------- bridge for the 5 embedded mini-games (balloon/vortex/penalty/thimbles/skyflyer) ----------------
    Each game runs in a same-origin iframe and calls window.parent.PFY_GameBridge
@@ -307,7 +308,7 @@ window.PFY_GameBridge = {
     if(error){ console.error("sync_coins failed:",error.message); return cur.coins; }
     cur.coins = data;
     if($("coins")) $("coins").textContent = cur.coins.toLocaleString();
-    if($("inr")) $("inr").textContent = "≈ ₹"+(cur.coins/10).toFixed(2);
+    if($("inr")) $("inr").textContent = "≈ ₹"+(cur.coins/COINS_PER_INR).toFixed(2);
     return data;
   }
 };
@@ -496,7 +497,7 @@ function renderLeaderboard(){
 function render(){
  if(!cur)return;
  $("coins").textContent=cur.coins.toLocaleString();
- $("inr").textContent="≈ ₹"+(cur.coins/10).toFixed(2);
+ $("inr").textContent="≈ ₹"+(cur.coins/COINS_PER_INR).toFixed(2);
  $("gamePoints").textContent=cur.game_points.toLocaleString();
  $("ovPoints").textContent=cur.game_points.toLocaleString();
  if($("ovRefs"))$("ovRefs").textContent=cur.referredUsers.filter(r=>r.status==="claimed").length;
@@ -530,7 +531,7 @@ function render(){
                ["pcheckAds",ads25],["pcheckRefs",refOk]];
  checks.forEach(([id,ok])=>{const el=$(id);if(!el)return;el.firstElementChild.textContent=ok?"✅":"🔒";});
 
- $("eligBal").textContent=cur.coins.toLocaleString()+" ≈ ₹"+(cur.coins/10).toFixed(2);
+ $("eligBal").textContent=cur.coins.toLocaleString()+" ≈ ₹"+(cur.coins/COINS_PER_INR).toFixed(2);
 
  const ledgerEl=$("ledgerList");
  const ledgerIcon=t=>t==="game_win"?"⭐":t==="referral_bonus"?"👥":"▶️";
@@ -562,7 +563,7 @@ let wdLastFocus=null;
 function showWithdrawPopup(amount,method){
  const pop=$("wdPopup");
  if(!pop){ alert("Withdrawal submitted. You will get it in 7 working days."); return; }
- $("wdAmt").textContent=amount.toLocaleString()+" coins (≈ ₹"+(amount/10).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+")";
+ $("wdAmt").textContent=amount.toLocaleString()+" coins (≈ ₹"+(amount/COINS_PER_INR).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+")";
  $("wdMethod").textContent=method;
  wdLastFocus=document.activeElement;
  pop.classList.add("open");
